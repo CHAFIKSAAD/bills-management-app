@@ -1,0 +1,105 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  USER
+}
+
+enum InvoiceStatus {
+  PAID
+  PARTIAL
+  UNPAID
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  password  String
+  role      Role     @default(USER)
+  createdAt DateTime @default(now())
+}
+
+model Client {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String?
+  phone     String?
+  address   String?
+  createdAt DateTime @default(now())
+
+  invoices  Invoice[]
+}
+
+model Category {
+  id        Int       @id @default(autoincrement())
+  name      String
+  createdAt DateTime  @default(now())
+
+  products  Product[]
+}
+
+model Product {
+  id          Int       @id @default(autoincrement())
+  name        String
+  description String?
+  price       Float
+  stock       Int       @default(0)
+  createdAt   DateTime  @default(now())
+
+  categoryId  Int?
+  category    Category? @relation(fields: [categoryId], references: [id])
+
+  invoiceItems InvoiceItem[]
+}
+
+model Invoice {
+  id        Int      @id @default(autoincrement())
+
+  clientId  Int
+  client    Client   @relation(fields: [clientId], references: [id])
+
+  totalHT   Float
+  tvaRate   Float    @default(20)
+  tvaAmount Float
+  discount  Float    @default(0)
+  totalTTC  Float
+
+  status    InvoiceStatus @default(UNPAID)
+  createdAt DateTime @default(now())
+
+  items     InvoiceItem[]
+  payments  Payment[]
+}
+
+model InvoiceItem {
+  id        Int      @id @default(autoincrement())
+
+  invoiceId Int
+  invoice   Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  productId Int
+  product   Product @relation(fields: [productId], references: [id])
+
+  quantity  Int
+  unitPrice Float
+  total     Float
+}
+
+model Payment {
+  id        Int      @id @default(autoincrement())
+
+  invoiceId Int
+  invoice   Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  amount    Float
+  method    String   @default("CASH")
+  paidAt    DateTime @default(now())
+}
