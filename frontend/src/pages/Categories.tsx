@@ -11,20 +11,43 @@ function Categories() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [name, setName] = useState("");
 
+  const [editingCategoryId, setEditingCategoryId] = useState<number | null>(null);
+
   const fetchCategories = async () => {
     const response = await api.get("/categories");
     setCategories(response.data);
   };
 
-  const addCategory = async (e: React.FormEvent) => {
+  const resetForm = () => {
+    setName("");
+    setEditingCategoryId(null);
+  };
+
+  const saveCategory = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    await api.post("/categories", {
-      name,
-    });
+    if (!name) {
+      alert("Please enter category name");
+      return;
+    }
 
-    setName("");
+    if (editingCategoryId) {
+      await api.put(`/categories/${editingCategoryId}`, {
+        name,
+      });
+    } else {
+      await api.post("/categories", {
+        name,
+      });
+    }
+
+    resetForm();
     fetchCategories();
+  };
+
+  const editCategory = (category: Category) => {
+    setEditingCategoryId(category.id);
+    setName(category.name);
   };
 
   const deleteCategory = async (id: number) => {
@@ -40,39 +63,60 @@ function Categories() {
 
   return (
     <div>
-      <h1>Categories</h1>
+      <h1 className="page-title">Categories</h1>
 
-      <form onSubmit={addCategory} style={{ background: "white", padding: "20px", marginBottom: "25px" }}>
-        <h3>Add Category</h3>
+      <form onSubmit={saveCategory} className="card">
+        <h3>{editingCategoryId ? "Update Category" : "Add Category"}</h3>
 
-        <input
-          placeholder="Category name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          style={{ padding: "8px", width: "300px" }}
-        />
+        <div className="form-grid grid-3">
+          <input
+            placeholder="Category name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+          />
 
-        <button type="submit" style={{ marginLeft: "10px", padding: "8px 20px" }}>
-          Add
-        </button>
+          <button type="submit" className="primary-button">
+            {editingCategoryId ? "Update" : "Add"}
+          </button>
+
+          {editingCategoryId && (
+            <button type="button" className="secondary-button" onClick={resetForm}>
+              Cancel
+            </button>
+          )}
+        </div>
       </form>
 
-      <table style={{ width: "100%", background: "white", borderCollapse: "collapse" }}>
+      <table className="table">
         <thead>
           <tr>
-            <th style={{ border: "1px solid #ddd", padding: "10px" }}>ID</th>
-            <th style={{ border: "1px solid #ddd", padding: "10px" }}>Name</th>
-            <th style={{ border: "1px solid #ddd", padding: "10px" }}>Actions</th>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Actions</th>
           </tr>
         </thead>
 
         <tbody>
           {categories.map((category) => (
             <tr key={category.id}>
-              <td style={{ border: "1px solid #ddd", padding: "10px" }}>{category.id}</td>
-              <td style={{ border: "1px solid #ddd", padding: "10px" }}>{category.name}</td>
-              <td style={{ border: "1px solid #ddd", padding: "10px" }}>
-                <button onClick={() => deleteCategory(category.id)}>Delete</button>
+              <td>{category.id}</td>
+              <td>{category.name}</td>
+              <td>
+                <div className="actions">
+                  <button
+                    className="secondary-button"
+                    onClick={() => editCategory(category)}
+                  >
+                    Edit
+                  </button>
+
+                  <button
+                    className="danger-button"
+                    onClick={() => deleteCategory(category.id)}
+                  >
+                    Delete
+                  </button>
+                </div>
               </td>
             </tr>
           ))}

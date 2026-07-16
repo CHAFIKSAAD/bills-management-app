@@ -1,0 +1,47 @@
+@startuml sequence_create_facture
+
+actor Utilisateur
+participant "Frontend React" as Front
+participant "API Express" as API
+participant "Auth Middleware JWT" as Auth
+participant "Invoice Controller" as Controller
+participant "Prisma ORM" as Prisma
+database "PostgreSQL" as DB
+
+Utilisateur -> Front : Remplit formulaire facture
+Utilisateur -> Front : Clique sur Create Invoice
+
+Front -> API : POST /api/invoices\nclientId, items, tvaRate, discount
+API -> Auth : Vérifier token JWT
+Auth --> API : Token valide
+
+API -> Controller : createInvoice(req, res)
+
+Controller -> Prisma : Vérifier client
+Prisma -> DB : SELECT Client WHERE id
+DB --> Prisma : Client trouvé
+
+loop Pour chaque produit
+  Controller -> Prisma : Vérifier produit et stock
+  Prisma -> DB : SELECT Product WHERE id
+  DB --> Prisma : Product trouvé
+
+  Controller -> Controller : Calcul total item
+  Controller -> Prisma : Diminuer stock produit
+  Prisma -> DB : UPDATE Product SET stock = stock - quantity
+end
+
+Controller -> Controller : Calcul totalHT
+Controller -> Controller : Calcul TVA
+Controller -> Controller : Calcul totalTTC
+
+Controller -> Prisma : Créer facture + lignes
+Prisma -> DB : INSERT Invoice + InvoiceItem
+DB --> Prisma : Facture créée
+
+Prisma --> Controller : Invoice complète
+Controller --> API : Response JSON
+API --> Front : Invoice created successfully
+Front --> Utilisateur : Affiche facture créée
+
+@enduml

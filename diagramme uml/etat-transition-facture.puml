@@ -1,0 +1,18 @@
+@startuml etat-transition-facture
+
+[*] --> UNPAID : Facture créée
+
+UNPAID --> PARTIAL : Paiement partiel
+PARTIAL --> PAID : Paiement du reste
+UNPAID --> PAID : Paiement complet direct
+
+PARTIAL --> PARTIAL : Nouveau paiement partiel
+
+PAID --> [*] : Facture totalement réglée
+
+UNPAID --> Cancelled : Suppression facture
+PARTIAL --> Cancelled : Suppression facture
+
+Cancelled --> [*]
+
+@enduml

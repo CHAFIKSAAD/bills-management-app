@@ -1,0 +1,53 @@
+@startuml sequence_paiement_facture   
+
+actor Utilisateur
+participant "Frontend React" as Front
+participant "API Express" as API
+participant "Auth Middleware JWT" as Auth
+participant "Payment Controller" as Controller
+participant "Prisma ORM" as Prisma
+database "PostgreSQL" as DB
+
+Utilisateur -> Front : Sélectionne facture
+Utilisateur -> Front : Saisit montant paiement
+Utilisateur -> Front : Clique Add Payment
+
+Front -> API : POST /api/payments\ninvoiceId, amount, method
+API -> Auth : Vérifier token JWT
+Auth --> API : Token valide
+
+API -> Controller : createPayment(req, res)
+
+Controller -> Prisma : Rechercher facture avec paiements
+Prisma -> DB : SELECT Invoice + Payments
+DB --> Prisma : Données facture
+
+Controller -> Controller : Calcul montant déjà payé
+Controller -> Controller : Calcul montant restant
+
+alt montant > montant restant
+  Controller --> API : Erreur montant invalide
+  API --> Front : Payment amount exceeds remaining amount
+else montant valide
+  Controller -> Prisma : Créer paiement
+  Prisma -> DB : INSERT Payment
+
+  Controller -> Controller : Calcul nouveau statut
+
+  alt total payé = totalTTC
+    Controller -> Prisma : status = PAID
+  else total payé > 0
+    Controller -> Prisma : status = PARTIAL
+  else aucun paiement
+    Controller -> Prisma : status = UNPAID
+  end
+
+  Prisma -> DB : UPDATE Invoice status
+  DB --> Prisma : Facture mise à jour
+
+  Controller --> API : Paiement créé
+  API --> Front : Payment created successfully
+  Front --> Utilisateur : Affiche paiement et statut
+end
+
+@enduml

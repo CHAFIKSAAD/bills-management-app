@@ -1,0 +1,40 @@
+@startuml create_facture 
+
+start
+
+:Utilisateur ouvre page Invoices;
+:Sélectionner client;
+:Sélectionner produit;
+:Saisir quantité;
+:Ajouter produit à la facture;
+
+if (Produit disponible en stock ?) then (Oui)
+  :Ajouter ligne facture;
+else (Non)
+  :Afficher erreur stock insuffisant;
+  stop
+endif
+
+if (Autre produit ?) then (Oui)
+  :Sélectionner autre produit;
+  :Saisir quantité;
+  :Ajouter produit à la facture;
+else (Non)
+endif
+
+:Saisir TVA;
+:Saisir remise;
+
+:Calculer Total HT;
+:Calculer montant TVA;
+:Calculer Total TTC;
+
+:Enregistrer facture;
+:Enregistrer lignes facture;
+:Déduire quantité du stock;
+
+:Afficher facture créée;
+
+stop
+
+@enduml

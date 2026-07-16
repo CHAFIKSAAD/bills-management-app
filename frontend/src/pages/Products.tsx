@@ -26,6 +26,8 @@ function Products() {
   const [stock, setStock] = useState("");
   const [categoryId, setCategoryId] = useState("");
 
+  const [editingProductId, setEditingProductId] = useState<number | null>(null);
+
   const fetchProducts = async () => {
     const response = await api.get("/products");
     setProducts(response.data);
@@ -36,24 +38,48 @@ function Products() {
     setCategories(response.data);
   };
 
-  const addProduct = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    await api.post("/products", {
-      name,
-      description,
-      price: Number(price),
-      stock: Number(stock),
-      categoryId: categoryId ? Number(categoryId) : null,
-    });
-
+  const resetForm = () => {
     setName("");
     setDescription("");
     setPrice("");
     setStock("");
     setCategoryId("");
+    setEditingProductId(null);
+  };
 
+  const saveProduct = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!name || !price || !stock || !categoryId) {
+      alert("Please fill name, price, stock and category");
+      return;
+    }
+
+    const productData = {
+      name,
+      description,
+      price: Number(price),
+      stock: Number(stock),
+      categoryId: Number(categoryId),
+    };
+
+    if (editingProductId) {
+      await api.put(`/products/${editingProductId}`, productData);
+    } else {
+      await api.post("/products", productData);
+    }
+
+    resetForm();
     fetchProducts();
+  };
+
+  const editProduct = (product: Product) => {
+    setEditingProductId(product.id);
+    setName(product.name);
+    setDescription(product.description || "");
+    setPrice(String(product.price));
+    setStock(String(product.stock));
+    setCategoryId(String(product.categoryId || product.category?.id || ""));
   };
 
   const deleteProduct = async (id: number) => {
@@ -70,12 +96,12 @@ function Products() {
 
   return (
     <div>
-      <h1>Products</h1>
+      <h1 className="page-title">Products</h1>
 
-      <form onSubmit={addProduct} style={{ background: "white", padding: "20px", marginBottom: "25px" }}>
-        <h3>Add Product</h3>
+      <form onSubmit={saveProduct} className="card">
+        <h3>{editingProductId ? "Update Product" : "Add Product"}</h3>
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: "10px" }}>
+        <div className="form-grid grid-5">
           <input
             placeholder="Name"
             value={name}
@@ -104,6 +130,7 @@ function Products() {
 
           <select value={categoryId} onChange={(e) => setCategoryId(e.target.value)}>
             <option value="">Select category</option>
+
             {categories.map((category) => (
               <option key={category.id} value={category.id}>
                 {category.name}
@@ -112,35 +139,57 @@ function Products() {
           </select>
         </div>
 
-        <button type="submit" style={{ marginTop: "15px", padding: "8px 20px" }}>
-          Add
-        </button>
+        <div style={{ marginTop: "15px", display: "flex", gap: "10px" }}>
+          <button type="submit" className="primary-button">
+            {editingProductId ? "Update" : "Add"}
+          </button>
+
+          {editingProductId && (
+            <button type="button" className="secondary-button" onClick={resetForm}>
+              Cancel
+            </button>
+          )}
+        </div>
       </form>
 
-      <table style={{ width: "100%", background: "white", borderCollapse: "collapse" }}>
+      <table className="table">
         <thead>
           <tr>
-            <th style={{ border: "1px solid #ddd", padding: "10px" }}>ID</th>
-            <th style={{ border: "1px solid #ddd", padding: "10px" }}>Name</th>
-            <th style={{ border: "1px solid #ddd", padding: "10px" }}>Description</th>
-            <th style={{ border: "1px solid #ddd", padding: "10px" }}>Price</th>
-            <th style={{ border: "1px solid #ddd", padding: "10px" }}>Stock</th>
-            <th style={{ border: "1px solid #ddd", padding: "10px" }}>Category</th>
-            <th style={{ border: "1px solid #ddd", padding: "10px" }}>Actions</th>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Price</th>
+            <th>Stock</th>
+            <th>Category</th>
+            <th>Actions</th>
           </tr>
         </thead>
 
         <tbody>
           {products.map((product) => (
             <tr key={product.id}>
-              <td style={{ border: "1px solid #ddd", padding: "10px" }}>{product.id}</td>
-              <td style={{ border: "1px solid #ddd", padding: "10px" }}>{product.name}</td>
-              <td style={{ border: "1px solid #ddd", padding: "10px" }}>{product.description}</td>
-              <td style={{ border: "1px solid #ddd", padding: "10px" }}>{product.price} DH</td>
-              <td style={{ border: "1px solid #ddd", padding: "10px" }}>{product.stock}</td>
-              <td style={{ border: "1px solid #ddd", padding: "10px" }}>{product.category?.name}</td>
-              <td style={{ border: "1px solid #ddd", padding: "10px" }}>
-                <button onClick={() => deleteProduct(product.id)}>Delete</button>
+              <td>{product.id}</td>
+              <td>{product.name}</td>
+              <td>{product.description}</td>
+              <td>{product.price} DH</td>
+              <td>{product.stock}</td>
+              <td>{product.category?.name}</td>
+              <td>
+                <div className="actions">
+                  <button
+                    className="secondary-button"
+                    onClick={() => editProduct(product)}
+                  >
+                    Edit
+                  </button>
+
+                  <button
+                    className="danger-button"
+                    onClick={() => deleteProduct(product.id)}
+                  >
+                    Delete
+                  </button>
+                </div>
               </td>
             </tr>
           ))}

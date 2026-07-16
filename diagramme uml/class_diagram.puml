@@ -1,0 +1,86 @@
+@startuml class User
+
+class User {
+  +id: Int
+  +name: String
+  +email: String
+  +password: String
+  +role: Role
+  +createdAt: DateTime
+}
+
+class Client {
+  +id: Int
+  +name: String
+  +email: String
+  +phone: String
+  +address: String
+  +createdAt: DateTime
+}
+
+class Category {
+  +id: Int
+  +name: String
+  +createdAt: DateTime
+}
+
+class Product {
+  +id: Int
+  +name: String
+  +description: String
+  +price: Float
+  +stock: Int
+  +createdAt: DateTime
+  +categoryId: Int
+}
+
+class Invoice {
+  +id: Int
+  +clientId: Int
+  +totalHT: Float
+  +tvaRate: Float
+  +tvaAmount: Float
+  +discount: Float
+  +totalTTC: Float
+  +status: InvoiceStatus
+  +createdAt: DateTime
+}
+
+class InvoiceItem {
+  +id: Int
+  +invoiceId: Int
+  +productId: Int
+  +quantity: Int
+  +unitPrice: Float
+  +total: Float
+}
+
+class Payment {
+  +id: Int
+  +invoiceId: Int
+  +amount: Float
+  +method: String
+  +paidAt: DateTime
+}
+
+enum Role {
+  ADMIN
+  USER
+}
+
+enum InvoiceStatus {
+  UNPAID
+  PARTIAL
+  PAID
+}
+
+Client "1" -- "0..*" Invoice : possède
+Invoice "1" -- "1..*" InvoiceItem : contient
+Product "1" -- "0..*" InvoiceItem : utilisé dans
+Category "1" -- "0..*" Product : contient
+Invoice "1" -- "0..*" Payment : reçoit
+
+User --> Role
+Invoice --> InvoiceStatus
+
+@enduml

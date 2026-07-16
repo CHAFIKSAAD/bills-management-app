@@ -1,0 +1,54 @@
+@startuml use_case
+left to right direction
+
+actor "Utilisateur" as User
+actor "Administrateur" as Admin
+
+rectangle "Bills Management App" {
+
+  usecase "Se connecter" as UC1
+  usecase "Se déconnecter" as UC2
+  usecase "Gérer les clients" as UC3
+  usecase "Gérer les catégories" as UC4
+  usecase "Gérer les produits" as UC5
+  usecase "Gérer le stock" as UC6
+  usecase "Créer une facture" as UC7
+  usecase "Consulter les factures" as UC8
+  usecase "Voir détail facture" as UC9
+  usecase "Exporter facture PDF" as UC10
+  usecase "Exporter factures Excel" as UC11
+  usecase "Ajouter un paiement" as UC12
+  usecase "Consulter historique paiements" as UC13
+  usecase "Consulter le dashboard" as UC14
+  usecase "Gérer les utilisateurs" as UC15
+}
+
+User --> UC1
+User --> UC2
+User --> UC3
+User --> UC4
+User --> UC5
+User --> UC6
+User --> UC7
+User --> UC8
+User --> UC9
+User --> UC10
+User --> UC11
+User --> UC12
+User --> UC13
+User --> UC14
+
+Admin --> UC15
+Admin --> UC3
+Admin --> UC4
+Admin --> UC5
+Admin --> UC7
+Admin --> UC12
+
+UC7 ..> UC5 : utilise produits
+UC7 ..> UC3 : utilise client
+UC7 ..> UC6 : diminue stock
+UC12 ..> UC8 : concerne facture
+UC12 ..> UC13 : génère historique
+
+@enduml
