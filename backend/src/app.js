@@ -8,12 +8,13 @@ const productRoutes = require("./routes/product.routes");
 const invoiceRoutes = require("./routes/invoice.routes");
 const paymentRoutes = require("./routes/payment.routes");
 const dashboardRoutes = require("./routes/dashboard.routes");
-
+const swaggerUi = require("swagger-ui-express");
+const swaggerDocument = require("./docs/swagger");
 const app = express();
 
 app.use(cors());
 app.use(express.json());
-
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 app.get("/", (req, res) => {
   res.json({
     message: "Bills Management API is running"
