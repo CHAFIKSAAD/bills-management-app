@@ -49,3 +49,36 @@ Bills Management App est une application web de gestion de facturation permettan
 ```bash
 git clone lien-du-repository
 cd bills-management-app
+## Captures d’écran
+
+### Dashboard
+
+![Dashboard](docs/screenshots/dashboard.png)
+
+### Clients
+
+![Clients](docs/screenshots/clients.png)
+
+### Categories
+
+![Categories](docs/screenshots/categories.png)
+
+### Products
+
+![Products](docs/screenshots/products.png)
+
+### Invoices
+
+![Invoices](docs/screenshots/invoices.png)
+
+### Payments
+
+![Payments](docs/screenshots/payments.png)
+
+### Invoice Details / PDF Export
+
+![Invoice Details](docs/screenshots/invoice-details.png)
+
+### Swagger API Documentation
+
+![Swagger](docs/screenshots/swagger.png)
