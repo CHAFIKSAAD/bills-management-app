@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import api from "../services/api";
 
 type Category = {
@@ -28,6 +28,9 @@ function Products() {
 
   const [editingProductId, setEditingProductId] = useState<number | null>(null);
 
+  const [search, setSearch] = useState("");
+  const [stockFilter, setStockFilter] = useState("ALL");
+
   const fetchProducts = async () => {
     const response = await api.get("/products");
     setProducts(response.data);
@@ -46,6 +49,37 @@ function Products() {
     setCategoryId("");
     setEditingProductId(null);
   };
+
+  const getStockBadgeClass = (stock: number) => {
+    if (stock === 0) return "badge badge-unpaid";
+    if (stock <= 5) return "badge badge-partial";
+    return "badge badge-paid";
+  };
+
+  const getStockLabel = (stock: number) => {
+    if (stock === 0) return "OUT OF STOCK";
+    if (stock <= 5) return "LOW STOCK";
+    return "IN STOCK";
+  };
+
+  const filteredProducts = useMemo(() => {
+    return products.filter((product) => {
+      const categoryName = product.category?.name || "";
+
+      const matchSearch =
+        product.name.toLowerCase().includes(search.toLowerCase()) ||
+        product.description?.toLowerCase().includes(search.toLowerCase()) ||
+        categoryName.toLowerCase().includes(search.toLowerCase());
+
+      const matchStock =
+        stockFilter === "ALL" ||
+        (stockFilter === "IN_STOCK" && product.stock > 5) ||
+        (stockFilter === "LOW_STOCK" && product.stock > 0 && product.stock <= 5) ||
+        (stockFilter === "OUT_OF_STOCK" && product.stock === 0);
+
+      return matchSearch && matchStock;
+    });
+  }, [products, search, stockFilter]);
 
   const saveProduct = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -96,7 +130,12 @@ function Products() {
 
   return (
     <div>
-      <h1 className="page-title">Products</h1>
+      <div className="card">
+        <h3 style={{ margin: 0 }}>Products Management</h3>
+        <p style={{ margin: "6px 0 0", color: "#6b7280" }}>
+          Manage products, categories, prices and stock levels.
+        </p>
+      </div>
 
       <form onSubmit={saveProduct} className="card">
         <h3>{editingProductId ? "Update Product" : "Add Product"}</h3>
@@ -152,6 +191,36 @@ function Products() {
         </div>
       </form>
 
+      <div className="card">
+        <h3>Filter Products</h3>
+
+        <div className="form-grid grid-3">
+          <input
+            placeholder="Search by name, description or category..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+
+          <select value={stockFilter} onChange={(e) => setStockFilter(e.target.value)}>
+            <option value="ALL">All stock</option>
+            <option value="IN_STOCK">In stock</option>
+            <option value="LOW_STOCK">Low stock</option>
+            <option value="OUT_OF_STOCK">Out of stock</option>
+          </select>
+
+          <button
+            type="button"
+            className="secondary-button"
+            onClick={() => {
+              setSearch("");
+              setStockFilter("ALL");
+            }}
+          >
+            Reset filters
+          </button>
+        </div>
+      </div>
+
       <table className="table">
         <thead>
           <tr>
@@ -160,39 +229,53 @@ function Products() {
             <th>Description</th>
             <th>Price</th>
             <th>Stock</th>
+            <th>Stock Status</th>
             <th>Category</th>
             <th>Actions</th>
           </tr>
         </thead>
 
         <tbody>
-          {products.map((product) => (
-            <tr key={product.id}>
-              <td>{product.id}</td>
-              <td>{product.name}</td>
-              <td>{product.description}</td>
-              <td>{product.price} DH</td>
-              <td>{product.stock}</td>
-              <td>{product.category?.name}</td>
-              <td>
-                <div className="actions">
-                  <button
-                    className="secondary-button"
-                    onClick={() => editProduct(product)}
-                  >
-                    Edit
-                  </button>
-
-                  <button
-                    className="danger-button"
-                    onClick={() => deleteProduct(product.id)}
-                  >
-                    Delete
-                  </button>
-                </div>
+          {filteredProducts.length === 0 ? (
+            <tr>
+              <td colSpan={8}>
+                <div className="empty-state">No products found</div>
               </td>
             </tr>
-          ))}
+          ) : (
+            filteredProducts.map((product) => (
+              <tr key={product.id}>
+                <td>{product.id}</td>
+                <td>{product.name}</td>
+                <td>{product.description}</td>
+                <td>{product.price} DH</td>
+                <td>{product.stock}</td>
+                <td>
+                  <span className={getStockBadgeClass(product.stock)}>
+                    {getStockLabel(product.stock)}
+                  </span>
+                </td>
+                <td>{product.category?.name}</td>
+                <td>
+                  <div className="actions">
+                    <button
+                      className="secondary-button"
+                      onClick={() => editProduct(product)}
+                    >
+                      Edit
+                    </button>
+
+                    <button
+                      className="danger-button"
+                      onClick={() => deleteProduct(product.id)}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))
+          )}
         </tbody>
       </table>
     </div>

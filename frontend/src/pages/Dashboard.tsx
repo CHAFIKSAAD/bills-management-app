@@ -14,24 +14,50 @@ type DashboardStats = {
 
 function Dashboard() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [error, setError] = useState("");
 
   const fetchStats = async () => {
-    const response = await api.get("/dashboard");
-    setStats(response.data);
+    try {
+      const response = await api.get("/dashboard");
+      setStats(response.data);
+    } catch (err: any) {
+      console.log("Dashboard error:", err);
+
+      if (err.response?.status === 401) {
+        localStorage.removeItem("token");
+        window.location.href = "/";
+        return;
+      }
+
+      setError("Impossible de charger le dashboard. Vérifie que le backend et Docker sont lancés.");
+    }
   };
 
   useEffect(() => {
     fetchStats();
   }, []);
 
+  if (error) {
+    return (
+      <div>
+        <div className="card">
+          <h3>Erreur</h3>
+          <p style={{ color: "red", fontWeight: "bold" }}>{error}</p>
+        </div>
+      </div>
+    );
+  }
+
   if (!stats) {
-    return <p>Chargement...</p>;
+    return (
+      <div className="card">
+        <p>Chargement...</p>
+      </div>
+    );
   }
 
   return (
     <div>
-      <h1 className="page-title">Dashboard</h1>
-
       <div className="stats-grid">
         <div className="stat-card">
           <h3>Clients</h3>
