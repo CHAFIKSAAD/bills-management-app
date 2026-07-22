@@ -12,8 +12,11 @@ const pageTitles: Record<string, string> = {
 function Layout() {
   const location = useLocation();
 
-  const currentPage = pageTitles[location.pathname] || "Bills App";
-
+  const currentPage =
+  location.pathname.startsWith("/invoices/")
+    ? "Invoice Details"
+    : pageTitles[location.pathname] || "Bills App";
+    
   const logout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");

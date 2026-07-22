@@ -1,16 +1,27 @@
 ﻿import { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import api from "../services/api";
+
+type Client = {
+  id: number;
+  name: string;
+  email: string;
+  phone: string;
+  address: string;
+};
+
+type Product = {
+  id: number;
+  name: string;
+};
 
 type InvoiceItem = {
   id: number;
+  productId: number;
   quantity: number;
   unitPrice: number;
   total: number;
-  product: {
-    id: number;
-    name: string;
-  };
+  product?: Product;
 };
 
 type Payment = {
@@ -22,6 +33,7 @@ type Payment = {
 
 type Invoice = {
   id: number;
+  clientId: number;
   totalHT: number;
   tvaRate: number;
   tvaAmount: number;
@@ -29,127 +41,207 @@ type Invoice = {
   totalTTC: number;
   status: string;
   createdAt: string;
-  client: {
-    id: number;
-    name: string;
-    email?: string;
-    phone?: string;
-    address?: string;
-  };
-  items: InvoiceItem[];
+  client?: Client;
+  items?: InvoiceItem[];
+  payments?: Payment[];
 };
 
 function InvoiceDetails() {
   const { id } = useParams();
-
   const [invoice, setInvoice] = useState<Invoice | null>(null);
-  const [payments, setPayments] = useState<Payment[]>([]);
 
   const fetchInvoice = async () => {
-    const invoiceRes = await api.get(`/invoices/${id}`);
-    const paymentsRes = await api.get(`/payments/invoice/${id}`);
-
-    setInvoice(invoiceRes.data);
-    setPayments(paymentsRes.data);
+    const response = await api.get(`/invoices/${id}`);
+    setInvoice(response.data);
   };
+
+  const getStatusBadgeClass = (status: string) => {
+    if (status === "PAID") return "badge badge-paid";
+    if (status === "PARTIAL") return "badge badge-partial";
+    return "badge badge-unpaid";
+  };
+
+  const formatInvoiceNumber = (id: number) => {
+    return `INV-${String(id).padStart(4, "0")}`;
+  };
+
+  const formatDate = (date: string) => {
+    return new Date(date).toLocaleDateString("fr-FR");
+  };
+
+  const totalPaid =
+    invoice?.payments?.reduce((sum, payment) => sum + Number(payment.amount), 0) || 0;
+
+  const remaining = invoice ? Number(invoice.totalTTC) - totalPaid : 0;
 
   useEffect(() => {
     fetchInvoice();
   }, []);
 
   if (!invoice) {
-    return <p>Loading...</p>;
+    return (
+      <div className="card">
+        <p>Chargement facture...</p>
+      </div>
+    );
   }
-
-  const totalPaid = payments.reduce((sum, payment) => sum + payment.amount, 0);
-  const remaining = invoice.totalTTC - totalPaid;
 
   return (
     <div>
-      <Link className="no-print" to="/invoices">Back to invoices</Link>
+      <div className="invoice-actions no-print">
+        <Link to="/invoices" className="secondary-button" style={{ textDecoration: "none" }}>
+          Back to invoices
+        </Link>
 
-      <h1>Invoice #{invoice.id}</h1>
-      <button
-  className="no-print"
-  onClick={() => window.print()}
-  style={{ marginBottom: "20px", padding: "8px 20px" }}
->
-  Print / Save as PDF
-</button>
-
-      <div style={{ background: "white", padding: "20px", marginBottom: "20px" }}>
-        <h3>Client</h3>
-        <p><strong>Name:</strong> {invoice.client.name}</p>
-        <p><strong>Email:</strong> {invoice.client.email}</p>
-        <p><strong>Phone:</strong> {invoice.client.phone}</p>
-        <p><strong>Address:</strong> {invoice.client.address}</p>
+        <button className="primary-button" onClick={() => window.print()}>
+          Print / Save as PDF
+        </button>
       </div>
 
-      <div style={{ background: "white", padding: "20px", marginBottom: "20px" }}>
-        <h3>Products</h3>
+      <div className="invoice-page">
+        <div className="invoice-header">
+          <div className="company-block">
+            <div className="company-logo">M</div>
 
-        <table style={{ width: "100%", borderCollapse: "collapse" }}>
-          <thead>
-            <tr>
-              <th style={{ border: "1px solid #ddd", padding: "10px" }}>Product</th>
-              <th style={{ border: "1px solid #ddd", padding: "10px" }}>Quantity</th>
-              <th style={{ border: "1px solid #ddd", padding: "10px" }}>Unit Price</th>
-              <th style={{ border: "1px solid #ddd", padding: "10px" }}>Total</th>
-            </tr>
-          </thead>
+            <div>
+              <h1>MASSMEDIA</h1>
+              <p>Solutions digitales & services informatiques</p>
+              <p>Casablanca, Maroc</p>
+              <p>Email: contact@massmedia.ma</p>
+              <p>Tél: +212 6 00 00 00 00</p>
+            </div>
+          </div>
 
-          <tbody>
-            {invoice.items.map((item) => (
-              <tr key={item.id}>
-                <td style={{ border: "1px solid #ddd", padding: "10px" }}>{item.product.name}</td>
-                <td style={{ border: "1px solid #ddd", padding: "10px" }}>{item.quantity}</td>
-                <td style={{ border: "1px solid #ddd", padding: "10px" }}>{item.unitPrice} DH</td>
-                <td style={{ border: "1px solid #ddd", padding: "10px" }}>{item.total} DH</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+          <div className="invoice-meta">
+            <h2>FACTURE</h2>
+            <p>
+              <strong>N°:</strong> {formatInvoiceNumber(invoice.id)}
+            </p>
+            <p>
+              <strong>Date:</strong> {formatDate(invoice.createdAt)}
+            </p>
+            <p>
+              <strong>Status:</strong>{" "}
+              <span className={getStatusBadgeClass(invoice.status)}>
+                {invoice.status}
+              </span>
+            </p>
+          </div>
+        </div>
 
-      <div style={{ background: "white", padding: "20px", marginBottom: "20px" }}>
-        <h3>Totals</h3>
-        <p><strong>Total HT:</strong> {invoice.totalHT} DH</p>
-        <p><strong>TVA:</strong> {invoice.tvaAmount} DH</p>
-        <p><strong>Discount:</strong> {invoice.discount} DH</p>
-        <p><strong>Total TTC:</strong> {invoice.totalTTC} DH</p>
-        <p><strong>Total Paid:</strong> {totalPaid} DH</p>
-        <p><strong>Remaining:</strong> {remaining} DH</p>
-        <p><strong>Status:</strong> {invoice.status}</p>
-      </div>
+        <div className="invoice-section">
+          <h3>Client</h3>
 
-      <div style={{ background: "white", padding: "20px" }}>
-        <h3>Payments</h3>
+          <div className="client-box">
+            <p>
+              <strong>Nom:</strong> {invoice.client?.name}
+            </p>
+            <p>
+              <strong>Email:</strong> {invoice.client?.email}
+            </p>
+            <p>
+              <strong>Téléphone:</strong> {invoice.client?.phone}
+            </p>
+            <p>
+              <strong>Adresse:</strong> {invoice.client?.address}
+            </p>
+          </div>
+        </div>
 
-        {payments.length === 0 ? (
-          <p>No payments yet.</p>
-        ) : (
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
+        <div className="invoice-section">
+          <h3>Produits</h3>
+
+          <table className="invoice-table">
             <thead>
               <tr>
-                <th style={{ border: "1px solid #ddd", padding: "10px" }}>Amount</th>
-                <th style={{ border: "1px solid #ddd", padding: "10px" }}>Method</th>
-                <th style={{ border: "1px solid #ddd", padding: "10px" }}>Date</th>
+                <th>Produit</th>
+                <th>Quantité</th>
+                <th>Prix unitaire</th>
+                <th>Total</th>
               </tr>
             </thead>
 
             <tbody>
-              {payments.map((payment) => (
-                <tr key={payment.id}>
-                  <td style={{ border: "1px solid #ddd", padding: "10px" }}>{payment.amount} DH</td>
-                  <td style={{ border: "1px solid #ddd", padding: "10px" }}>{payment.method}</td>
-                  <td style={{ border: "1px solid #ddd", padding: "10px" }}>
-                    {new Date(payment.paidAt).toLocaleString()}
-                  </td>
+              {invoice.items?.map((item) => (
+                <tr key={item.id}>
+                  <td>{item.product?.name}</td>
+                  <td>{item.quantity}</td>
+                  <td>{item.unitPrice} DH</td>
+                  <td>{item.total} DH</td>
                 </tr>
               ))}
             </tbody>
           </table>
-        )}
+        </div>
+
+        <div className="invoice-bottom">
+          <div className="payment-box">
+            <h3>Paiements</h3>
+
+            {invoice.payments && invoice.payments.length > 0 ? (
+              <table className="invoice-table">
+                <thead>
+                  <tr>
+                    <th>Montant</th>
+                    <th>Méthode</th>
+                    <th>Date</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  {invoice.payments.map((payment) => (
+                    <tr key={payment.id}>
+                      <td>{payment.amount} DH</td>
+                      <td>{payment.method}</td>
+                      <td>{formatDate(payment.paidAt)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : (
+              <p>Aucun paiement enregistré.</p>
+            )}
+          </div>
+
+          <div className="totals-box">
+            <h3>Résumé</h3>
+
+            <div className="total-line">
+              <span>Total HT</span>
+              <strong>{invoice.totalHT} DH</strong>
+            </div>
+
+            <div className="total-line">
+              <span>TVA ({invoice.tvaRate}%)</span>
+              <strong>{invoice.tvaAmount} DH</strong>
+            </div>
+
+            <div className="total-line">
+              <span>Remise</span>
+              <strong>{invoice.discount} DH</strong>
+            </div>
+
+            <div className="total-line total-ttc">
+              <span>Total TTC</span>
+              <strong>{invoice.totalTTC} DH</strong>
+            </div>
+
+            <div className="total-line">
+              <span>Total payé</span>
+              <strong>{totalPaid} DH</strong>
+            </div>
+
+            <div className="total-line">
+              <span>Reste</span>
+              <strong>{remaining} DH</strong>
+            </div>
+          </div>
+        </div>
+
+        <div className="invoice-footer">
+          <p>Merci pour votre confiance.</p>
+          <p>MASSMEDIA — Facture générée automatiquement par Bills Management App.</p>
+        </div>
       </div>
     </div>
   );
