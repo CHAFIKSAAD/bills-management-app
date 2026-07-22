@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
 import ConfirmModal from "../components/ConfirmModal";
 import api from "../services/api";
@@ -23,6 +23,11 @@ function Clients() {
   const [editingClientId, setEditingClientId] = useState<number | null>(null);
   const [deleteClientId, setDeleteClientId] = useState<number | null>(null);
 
+  const [search, setSearch] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const itemsPerPage = 5;
+
   const fetchClients = async () => {
     try {
       const response = await api.get("/clients");
@@ -31,6 +36,26 @@ function Clients() {
       toast.error("Failed to load clients");
     }
   };
+
+  const filteredClients = useMemo(() => {
+    return clients.filter((client) => {
+      const keyword = search.toLowerCase();
+
+      return (
+        client.name.toLowerCase().includes(keyword) ||
+        client.email.toLowerCase().includes(keyword) ||
+        client.phone.toLowerCase().includes(keyword) ||
+        client.address.toLowerCase().includes(keyword)
+      );
+    });
+  }, [clients, search]);
+
+  const totalPages = Math.ceil(filteredClients.length / itemsPerPage);
+
+  const paginatedClients = filteredClients.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
   const resetForm = () => {
     setName("");
@@ -109,6 +134,10 @@ function Clients() {
     fetchClients();
   }, []);
 
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search]);
+
   return (
     <div>
       <div className="card">
@@ -160,6 +189,30 @@ function Clients() {
         </div>
       </form>
 
+      <div className="card">
+        <h3>Search Clients</h3>
+
+        <div className="form-grid grid-3">
+          <input
+            placeholder="Search by name, email, phone or address..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+
+          <button
+            type="button"
+            className="secondary-button"
+            onClick={() => setSearch("")}
+          >
+            Reset search
+          </button>
+
+          <div className="table-counter">
+            {filteredClients.length} client(s) found
+          </div>
+        </div>
+      </div>
+
       <table className="table">
         <thead>
           <tr>
@@ -173,14 +226,14 @@ function Clients() {
         </thead>
 
         <tbody>
-          {clients.length === 0 ? (
+          {paginatedClients.length === 0 ? (
             <tr>
               <td colSpan={6}>
                 <div className="empty-state">No clients found</div>
               </td>
             </tr>
           ) : (
-            clients.map((client) => (
+            paginatedClients.map((client) => (
               <tr key={client.id}>
                 <td>{client.id}</td>
                 <td>{client.name}</td>
@@ -209,6 +262,30 @@ function Clients() {
           )}
         </tbody>
       </table>
+
+      {totalPages > 1 && (
+        <div className="pagination">
+          <button
+            className="secondary-button"
+            disabled={currentPage === 1}
+            onClick={() => setCurrentPage(currentPage - 1)}
+          >
+            Previous
+          </button>
+
+          <span>
+            Page {currentPage} / {totalPages}
+          </span>
+
+          <button
+            className="secondary-button"
+            disabled={currentPage === totalPages}
+            onClick={() => setCurrentPage(currentPage + 1)}
+          >
+            Next
+          </button>
+        </div>
+      )}
 
       {deleteClientId && (
         <ConfirmModal

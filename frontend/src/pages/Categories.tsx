@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
 import ConfirmModal from "../components/ConfirmModal";
 import api from "../services/api";
@@ -16,6 +16,11 @@ function Categories() {
   const [editingCategoryId, setEditingCategoryId] = useState<number | null>(null);
   const [deleteCategoryId, setDeleteCategoryId] = useState<number | null>(null);
 
+  const [search, setSearch] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const itemsPerPage = 5;
+
   const fetchCategories = async () => {
     try {
       const response = await api.get("/categories");
@@ -24,6 +29,19 @@ function Categories() {
       toast.error("Failed to load categories");
     }
   };
+
+  const filteredCategories = useMemo(() => {
+    return categories.filter((category) =>
+      category.name.toLowerCase().includes(search.toLowerCase())
+    );
+  }, [categories, search]);
+
+  const totalPages = Math.ceil(filteredCategories.length / itemsPerPage);
+
+  const paginatedCategories = filteredCategories.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
   const resetForm = () => {
     setName("");
@@ -84,6 +102,10 @@ function Categories() {
     fetchCategories();
   }, []);
 
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search]);
+
   return (
     <div>
       <div className="card">
@@ -115,6 +137,30 @@ function Categories() {
         </div>
       </form>
 
+      <div className="card">
+        <h3>Search Categories</h3>
+
+        <div className="form-grid grid-3">
+          <input
+            placeholder="Search by category name..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+
+          <button
+            type="button"
+            className="secondary-button"
+            onClick={() => setSearch("")}
+          >
+            Reset search
+          </button>
+
+          <div className="table-counter">
+            {filteredCategories.length} categorie(s) found
+          </div>
+        </div>
+      </div>
+
       <table className="table">
         <thead>
           <tr>
@@ -125,14 +171,14 @@ function Categories() {
         </thead>
 
         <tbody>
-          {categories.length === 0 ? (
+          {paginatedCategories.length === 0 ? (
             <tr>
               <td colSpan={3}>
                 <div className="empty-state">No categories found</div>
               </td>
             </tr>
           ) : (
-            categories.map((category) => (
+            paginatedCategories.map((category) => (
               <tr key={category.id}>
                 <td>{category.id}</td>
                 <td>{category.name}</td>
@@ -158,6 +204,30 @@ function Categories() {
           )}
         </tbody>
       </table>
+
+      {totalPages > 1 && (
+        <div className="pagination">
+          <button
+            className="secondary-button"
+            disabled={currentPage === 1}
+            onClick={() => setCurrentPage(currentPage - 1)}
+          >
+            Previous
+          </button>
+
+          <span>
+            Page {currentPage} / {totalPages}
+          </span>
+
+          <button
+            className="secondary-button"
+            disabled={currentPage === totalPages}
+            onClick={() => setCurrentPage(currentPage + 1)}
+          >
+            Next
+          </button>
+        </div>
+      )}
 
       {deleteCategoryId && (
         <ConfirmModal

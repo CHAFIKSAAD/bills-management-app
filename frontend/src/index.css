@@ -902,3 +902,35 @@ select:focus {
 .topbar-user {
   border-color: #fecaca !important;
 }
+
+/* Search and pagination */
+
+.table-counter {
+  display: flex;
+  align-items: center;
+  color: #6b7280;
+  font-weight: 700;
+}
+
+.pagination {
+  margin-top: 18px;
+  padding: 16px;
+  background: white;
+  border-radius: 16px;
+  border: 1px solid #eef2f7;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
+}
+
+.pagination span {
+  font-weight: 800;
+  color: #374151;
+}
+
+.pagination button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
