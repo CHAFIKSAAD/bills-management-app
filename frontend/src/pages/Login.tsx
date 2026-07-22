@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../services/api";
 
@@ -8,9 +8,13 @@ function Login() {
   const [email, setEmail] = useState("saad@test.com");
   const [password, setPassword] = useState("123456");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const login = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    setError("");
+    setLoading(true);
 
     try {
       const response = await api.post("/auth/login", {
@@ -24,40 +28,74 @@ function Login() {
       navigate("/dashboard");
     } catch (err) {
       setError("Email ou mot de passe incorrect");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div style={{ maxWidth: "400px", margin: "100px auto", fontFamily: "Arial" }}>
-      <h1>Login</h1>
+    <div className="login-page">
+      <div className="login-left">
+       <div className="login-brand">
+  <img src="/massmedia-logo.jpg" alt="MASSMEDIA" className="login-company-logo" />
+  <div>
+    <h1>MASSMEDIA</h1>
+    <p>Bills Management System</p>
+  </div>
+</div>
 
-      <form onSubmit={handleLogin}>
-        <div style={{ marginBottom: "15px" }}>
+        <div className="login-info">
+          <h2>Gestion de facturation moderne</h2>
+          <p>
+            Gérez vos clients, produits, factures, paiements, exports PDF/Excel
+            et statistiques depuis une seule application.
+          </p>
+
+          <div className="login-features">
+            <span>✔ Clients</span>
+            <span>✔ Produits</span>
+            <span>✔ Factures</span>
+            <span>✔ Paiements</span>
+            <span>✔ Dashboard</span>
+            <span>✔ Exports</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="login-right">
+        <form onSubmit={login} className="login-card">
+          <h2>Connexion</h2>
+          <p>Connectez-vous à votre espace de gestion</p>
+
+          {error && <div className="login-error">{error}</div>}
+
           <label>Email</label>
           <input
             type="email"
+            placeholder="saad@test.com"
             value={email}
-            style={{ width: "100%", padding: "10px", marginTop: "5px" }}
             onChange={(e) => setEmail(e.target.value)}
           />
-        </div>
 
-        <div style={{ marginBottom: "15px" }}>
-          <label>Password</label>
+          <label>Mot de passe</label>
           <input
             type="password"
+            placeholder="123456"
             value={password}
-            style={{ width: "100%", padding: "10px", marginTop: "5px" }}
             onChange={(e) => setPassword(e.target.value)}
           />
-        </div>
 
-        {error && <p style={{ color: "red" }}>{error}</p>}
+          <button type="submit" className="login-button" disabled={loading}>
+            {loading ? "Connexion..." : "Se connecter"}
+          </button>
 
-        <button type="submit" style={{ width: "100%", padding: "10px" }}>
-          Se connecter
-        </button>
-      </form>
+          <div className="login-demo">
+            <strong>Compte de test</strong>
+            <span>Email: saad@test.com</span>
+            <span>Password: 123456</span>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }

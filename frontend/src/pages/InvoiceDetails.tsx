@@ -101,7 +101,7 @@ function InvoiceDetails() {
       <div className="invoice-page">
         <div className="invoice-header">
           <div className="company-block">
-            <div className="company-logo">M</div>
+            <img src="/massmedia-logo.jpg" alt="MASSMEDIA" className="invoice-company-logo" />
 
             <div>
               <h1>MASSMEDIA</h1>

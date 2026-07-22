@@ -12,11 +12,17 @@ const pageTitles: Record<string, string> = {
 function Layout() {
   const location = useLocation();
 
-  const currentPage =
-  location.pathname.startsWith("/invoices/")
+  const storedUser = localStorage.getItem("user");
+  const user = storedUser ? JSON.parse(storedUser) : null;
+
+  const userName = user?.name || "User";
+  const userRole = user?.role || "USER";
+  const userInitial = userName.charAt(0).toUpperCase();
+
+  const currentPage = location.pathname.startsWith("/invoices/")
     ? "Invoice Details"
     : pageTitles[location.pathname] || "Bills App";
-    
+
   const logout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
@@ -27,10 +33,11 @@ function Layout() {
     <div className="app-layout">
       <aside className="sidebar no-print">
         <div className="brand">
-          <div className="brand-icon">B</div>
+          <img src="/massmedia-logo.jpg" alt="MASSMEDIA" className="brand-logo-img" />
+
           <div>
-            <h2>Bills App</h2>
-            <span>Management System</span>
+            <h2>MASSMEDIA</h2>
+            <span>Bills Management System</span>
           </div>
         </div>
 
@@ -109,10 +116,11 @@ function Layout() {
           </div>
 
           <div className="topbar-user">
-            <div className="user-avatar">S</div>
+            <div className="user-avatar">{userInitial}</div>
+
             <div>
-              <strong>Saad</strong>
-              <span>Admin</span>
+              <strong>{userName}</strong>
+              <span>{userRole}</span>
             </div>
           </div>
         </header>
