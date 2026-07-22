@@ -1,4 +1,6 @@
 ﻿import { useEffect, useState } from "react";
+import toast from "react-hot-toast";
+import ConfirmModal from "../components/ConfirmModal";
 import api from "../services/api";
 
 type Category = {
@@ -12,10 +14,15 @@ function Categories() {
   const [name, setName] = useState("");
 
   const [editingCategoryId, setEditingCategoryId] = useState<number | null>(null);
+  const [deleteCategoryId, setDeleteCategoryId] = useState<number | null>(null);
 
   const fetchCategories = async () => {
-    const response = await api.get("/categories");
-    setCategories(response.data);
+    try {
+      const response = await api.get("/categories");
+      setCategories(response.data);
+    } catch (error) {
+      toast.error("Failed to load categories");
+    }
   };
 
   const resetForm = () => {
@@ -27,22 +34,24 @@ function Categories() {
     e.preventDefault();
 
     if (!name) {
-      alert("Please enter category name");
+      toast.error("Please enter category name");
       return;
     }
 
-    if (editingCategoryId) {
-      await api.put(`/categories/${editingCategoryId}`, {
-        name,
-      });
-    } else {
-      await api.post("/categories", {
-        name,
-      });
-    }
+    try {
+      if (editingCategoryId) {
+        await api.put(`/categories/${editingCategoryId}`, { name });
+        toast.success("Category updated successfully");
+      } else {
+        await api.post("/categories", { name });
+        toast.success("Category created successfully");
+      }
 
-    resetForm();
-    fetchCategories();
+      resetForm();
+      fetchCategories();
+    } catch (error) {
+      toast.error("Operation failed");
+    }
   };
 
   const editCategory = (category: Category) => {
@@ -50,11 +59,25 @@ function Categories() {
     setName(category.name);
   };
 
-  const deleteCategory = async (id: number) => {
-    if (!confirm("Delete this category?")) return;
+  const requestDeleteCategory = (id: number) => {
+    setDeleteCategoryId(id);
+  };
 
-    await api.delete(`/categories/${id}`);
-    fetchCategories();
+  const confirmDeleteCategory = async () => {
+    if (!deleteCategoryId) return;
+
+    try {
+      await api.delete(`/categories/${deleteCategoryId}`);
+      toast.success("Category deleted successfully");
+      setDeleteCategoryId(null);
+      fetchCategories();
+    } catch (error) {
+      toast.error("Category delete failed");
+    }
+  };
+
+  const cancelDeleteCategory = () => {
+    setDeleteCategoryId(null);
   };
 
   useEffect(() => {
@@ -63,7 +86,12 @@ function Categories() {
 
   return (
     <div>
-      <h1 className="page-title">Categories</h1>
+      <div className="card">
+        <h3 style={{ margin: 0 }}>Categories Management</h3>
+        <p style={{ margin: "6px 0 0", color: "#6b7280" }}>
+          Organize products by categories.
+        </p>
+      </div>
 
       <form onSubmit={saveCategory} className="card">
         <h3>{editingCategoryId ? "Update Category" : "Add Category"}</h3>
@@ -97,31 +125,50 @@ function Categories() {
         </thead>
 
         <tbody>
-          {categories.map((category) => (
-            <tr key={category.id}>
-              <td>{category.id}</td>
-              <td>{category.name}</td>
-              <td>
-                <div className="actions">
-                  <button
-                    className="secondary-button"
-                    onClick={() => editCategory(category)}
-                  >
-                    Edit
-                  </button>
-
-                  <button
-                    className="danger-button"
-                    onClick={() => deleteCategory(category.id)}
-                  >
-                    Delete
-                  </button>
-                </div>
+          {categories.length === 0 ? (
+            <tr>
+              <td colSpan={3}>
+                <div className="empty-state">No categories found</div>
               </td>
             </tr>
-          ))}
+          ) : (
+            categories.map((category) => (
+              <tr key={category.id}>
+                <td>{category.id}</td>
+                <td>{category.name}</td>
+                <td>
+                  <div className="actions">
+                    <button
+                      className="secondary-button"
+                      onClick={() => editCategory(category)}
+                    >
+                      Edit
+                    </button>
+
+                    <button
+                      className="danger-button"
+                      onClick={() => requestDeleteCategory(category.id)}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))
+          )}
         </tbody>
       </table>
+
+      {deleteCategoryId && (
+        <ConfirmModal
+          title="Delete Category"
+          message="Are you sure you want to delete this category? This action cannot be undone."
+          confirmText="Delete"
+          cancelText="Cancel"
+          onConfirm={confirmDeleteCategory}
+          onCancel={cancelDeleteCategory}
+        />
+      )}
     </div>
   );
 }

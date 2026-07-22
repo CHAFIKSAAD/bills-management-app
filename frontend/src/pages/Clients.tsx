@@ -1,4 +1,6 @@
 ﻿import { useEffect, useState } from "react";
+import toast from "react-hot-toast";
+import ConfirmModal from "../components/ConfirmModal";
 import api from "../services/api";
 
 type Client = {
@@ -19,10 +21,15 @@ function Clients() {
   const [address, setAddress] = useState("");
 
   const [editingClientId, setEditingClientId] = useState<number | null>(null);
+  const [deleteClientId, setDeleteClientId] = useState<number | null>(null);
 
   const fetchClients = async () => {
-    const response = await api.get("/clients");
-    setClients(response.data);
+    try {
+      const response = await api.get("/clients");
+      setClients(response.data);
+    } catch (error) {
+      toast.error("Failed to load clients");
+    }
   };
 
   const resetForm = () => {
@@ -37,28 +44,36 @@ function Clients() {
     e.preventDefault();
 
     if (!name || !email || !phone || !address) {
-      alert("Please fill all fields");
+      toast.error("Please fill all fields");
       return;
     }
 
-    if (editingClientId) {
-      await api.put(`/clients/${editingClientId}`, {
-        name,
-        email,
-        phone,
-        address,
-      });
-    } else {
-      await api.post("/clients", {
-        name,
-        email,
-        phone,
-        address,
-      });
-    }
+    try {
+      if (editingClientId) {
+        await api.put(`/clients/${editingClientId}`, {
+          name,
+          email,
+          phone,
+          address,
+        });
 
-    resetForm();
-    fetchClients();
+        toast.success("Client updated successfully");
+      } else {
+        await api.post("/clients", {
+          name,
+          email,
+          phone,
+          address,
+        });
+
+        toast.success("Client created successfully");
+      }
+
+      resetForm();
+      fetchClients();
+    } catch (error) {
+      toast.error("Operation failed");
+    }
   };
 
   const editClient = (client: Client) => {
@@ -69,11 +84,25 @@ function Clients() {
     setAddress(client.address);
   };
 
-  const deleteClient = async (id: number) => {
-    if (!confirm("Delete this client?")) return;
+  const requestDeleteClient = (id: number) => {
+    setDeleteClientId(id);
+  };
 
-    await api.delete(`/clients/${id}`);
-    fetchClients();
+  const confirmDeleteClient = async () => {
+    if (!deleteClientId) return;
+
+    try {
+      await api.delete(`/clients/${deleteClientId}`);
+      toast.success("Client deleted successfully");
+      setDeleteClientId(null);
+      fetchClients();
+    } catch (error) {
+      toast.error("Client delete failed");
+    }
+  };
+
+  const cancelDeleteClient = () => {
+    setDeleteClientId(null);
   };
 
   useEffect(() => {
@@ -82,7 +111,12 @@ function Clients() {
 
   return (
     <div>
-      <h1 className="page-title">Clients</h1>
+      <div className="card">
+        <h3 style={{ margin: 0 }}>Clients Management</h3>
+        <p style={{ margin: "6px 0 0", color: "#6b7280" }}>
+          Manage customer information and contact details.
+        </p>
+      </div>
 
       <form onSubmit={saveClient} className="card">
         <h3>{editingClientId ? "Update Client" : "Add Client"}</h3>
@@ -139,34 +173,53 @@ function Clients() {
         </thead>
 
         <tbody>
-          {clients.map((client) => (
-            <tr key={client.id}>
-              <td>{client.id}</td>
-              <td>{client.name}</td>
-              <td>{client.email}</td>
-              <td>{client.phone}</td>
-              <td>{client.address}</td>
-              <td>
-                <div className="actions">
-                  <button
-                    className="secondary-button"
-                    onClick={() => editClient(client)}
-                  >
-                    Edit
-                  </button>
-
-                  <button
-                    className="danger-button"
-                    onClick={() => deleteClient(client.id)}
-                  >
-                    Delete
-                  </button>
-                </div>
+          {clients.length === 0 ? (
+            <tr>
+              <td colSpan={6}>
+                <div className="empty-state">No clients found</div>
               </td>
             </tr>
-          ))}
+          ) : (
+            clients.map((client) => (
+              <tr key={client.id}>
+                <td>{client.id}</td>
+                <td>{client.name}</td>
+                <td>{client.email}</td>
+                <td>{client.phone}</td>
+                <td>{client.address}</td>
+                <td>
+                  <div className="actions">
+                    <button
+                      className="secondary-button"
+                      onClick={() => editClient(client)}
+                    >
+                      Edit
+                    </button>
+
+                    <button
+                      className="danger-button"
+                      onClick={() => requestDeleteClient(client.id)}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))
+          )}
         </tbody>
       </table>
+
+      {deleteClientId && (
+        <ConfirmModal
+          title="Delete Client"
+          message="Are you sure you want to delete this client? This action cannot be undone."
+          confirmText="Delete"
+          cancelText="Cancel"
+          onConfirm={confirmDeleteClient}
+          onCancel={cancelDeleteClient}
+        />
+      )}
     </div>
   );
 }

@@ -1,4 +1,6 @@
 ﻿import { useEffect, useMemo, useState } from "react";
+import toast from "react-hot-toast";
+import ConfirmModal from "../components/ConfirmModal";
 import api from "../services/api";
 
 type Category = {
@@ -30,6 +32,7 @@ function Products() {
 
   const [search, setSearch] = useState("");
   const [stockFilter, setStockFilter] = useState("ALL");
+  const [deleteProductId, setDeleteProductId] = useState<number | null>(null);
 
   const fetchProducts = async () => {
     const response = await api.get("/products");
@@ -85,7 +88,7 @@ function Products() {
     e.preventDefault();
 
     if (!name || !price || !stock || !categoryId) {
-      alert("Please fill name, price, stock and category");
+      toast.error("Please fill name, price, stock and category");
       return;
     }
 
@@ -98,13 +101,15 @@ function Products() {
     };
 
     if (editingProductId) {
-      await api.put(`/products/${editingProductId}`, productData);
-    } else {
-      await api.post("/products", productData);
-    }
+  await api.put(`/products/${editingProductId}`, productData);
+  toast.success("Product updated successfully");
+} else {
+  await api.post("/products", productData);
+  toast.success("Product created successfully");
+}
 
-    resetForm();
-    fetchProducts();
+resetForm();
+fetchProducts();
   };
 
   const editProduct = (product: Product) => {
@@ -116,12 +121,26 @@ function Products() {
     setCategoryId(String(product.categoryId || product.category?.id || ""));
   };
 
-  const deleteProduct = async (id: number) => {
-    if (!confirm("Delete this product?")) return;
+ const requestDeleteProduct = (id: number) => {
+  setDeleteProductId(id);
+};
 
-    await api.delete(`/products/${id}`);
+const confirmDeleteProduct = async () => {
+  if (!deleteProductId) return;
+
+  try {
+    await api.delete(`/products/${deleteProductId}`);
+    toast.success("Product deleted successfully");
+    setDeleteProductId(null);
     fetchProducts();
-  };
+  } catch (error) {
+    toast.error("Product delete failed");
+  }
+};
+
+const cancelDeleteProduct = () => {
+  setDeleteProductId(null);
+};
 
   useEffect(() => {
     fetchProducts();
@@ -267,7 +286,7 @@ function Products() {
 
                     <button
                       className="danger-button"
-                      onClick={() => deleteProduct(product.id)}
+                      onClick={() => requestDeleteProduct(product.id)}
                     >
                       Delete
                     </button>
@@ -278,6 +297,16 @@ function Products() {
           )}
         </tbody>
       </table>
+     {deleteProductId && (
+  <ConfirmModal
+    title="Delete Product"
+    message="Are you sure you want to delete this product? This action cannot be undone."
+    confirmText="Delete"
+    cancelText="Cancel"
+    onConfirm={confirmDeleteProduct}
+    onCancel={cancelDeleteProduct}
+  />
+)} 
     </div>
   );
 }

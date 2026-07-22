@@ -1,4 +1,5 @@
 ﻿import { useEffect, useMemo, useState } from "react";
+import toast from "react-hot-toast";
 import api from "../services/api";
 
 type Client = {
@@ -34,11 +35,15 @@ function Payments() {
   const [statusFilter, setStatusFilter] = useState("ALL");
 
   const fetchData = async () => {
-    const paymentsRes = await api.get("/payments");
-    const invoicesRes = await api.get("/invoices");
+    try {
+      const paymentsRes = await api.get("/payments");
+      const invoicesRes = await api.get("/invoices");
 
-    setPayments(paymentsRes.data);
-    setInvoices(invoicesRes.data);
+      setPayments(paymentsRes.data);
+      setInvoices(invoicesRes.data);
+    } catch (error) {
+      toast.error("Failed to load payments");
+    }
   };
 
   const getStatusBadgeClass = (status: string) => {
@@ -67,21 +72,30 @@ function Payments() {
     e.preventDefault();
 
     if (!invoiceId || !amount || Number(amount) <= 0) {
-      alert("Please select invoice and enter a valid amount");
+      toast.error("Please select invoice and enter a valid amount");
       return;
     }
 
-    await api.post("/payments", {
-      invoiceId: Number(invoiceId),
-      amount: Number(amount),
-      method,
-    });
+    try {
+      await api.post("/payments", {
+        invoiceId: Number(invoiceId),
+        amount: Number(amount),
+        method,
+      });
 
-    setInvoiceId("");
-    setAmount("");
-    setMethod("CASH");
+      toast.success("Payment added successfully");
 
-    fetchData();
+      setInvoiceId("");
+      setAmount("");
+      setMethod("CASH");
+
+      fetchData();
+    } catch (error: any) {
+      const message =
+        error.response?.data?.message || "Payment operation failed";
+
+      toast.error(message);
+    }
   };
 
   const formatDate = (date: string) => {
@@ -94,21 +108,12 @@ function Payments() {
 
   return (
     <div>
-      <div
-        className="card"
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          gap: "15px",
-        }}
-      >
-        <div>
-          <h3 style={{ margin: 0 }}>Payments Management</h3>
-          <p style={{ margin: "6px 0 0", color: "#6b7280" }}>
-            Add payments, follow invoice status and filter payment history.
-          </p>
-        </div>
+      <div className="card">
+        <h3 style={{ margin: 0 }}>Payments Management</h3>
+
+        <p style={{ margin: "6px 0 0", color: "#6b7280" }}>
+          Add payments, follow invoice status and filter payment history.
+        </p>
       </div>
 
       <form onSubmit={addPayment} className="card">

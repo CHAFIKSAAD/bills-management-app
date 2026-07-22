@@ -1,5 +1,7 @@
 ﻿import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import toast from "react-hot-toast";
+import ConfirmModal from "../components/ConfirmModal";
 import * as XLSX from "xlsx";
 import api from "../services/api";
 
@@ -21,6 +23,14 @@ type InvoiceItemForm = {
   quantity: number;
 };
 
+type Payment = {
+  id: number;
+  invoiceId: number;
+  amount: number;
+  method: string;
+  paidAt: string;
+};
+
 type Invoice = {
   id: number;
   totalHT: number;
@@ -30,14 +40,6 @@ type Invoice = {
   totalTTC: number;
   status: string;
   client: Client;
-};
-
-type Payment = {
-  id: number;
-  invoiceId: number;
-  amount: number;
-  method: string;
-  paidAt: string;
 };
 
 function Invoices() {
@@ -59,18 +61,21 @@ function Invoices() {
   const [paymentInvoice, setPaymentInvoice] = useState<Invoice | null>(null);
   const [paymentAmount, setPaymentAmount] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("CASH");
-
   const [paymentPaidAmount, setPaymentPaidAmount] = useState(0);
   const [paymentRemainingAmount, setPaymentRemainingAmount] = useState(0);
-
+  const [deleteInvoiceId, setDeleteInvoiceId] = useState<number | null>(null);
   const fetchData = async () => {
-    const clientsRes = await api.get("/clients");
-    const productsRes = await api.get("/products");
-    const invoicesRes = await api.get("/invoices");
+    try {
+      const clientsRes = await api.get("/clients");
+      const productsRes = await api.get("/products");
+      const invoicesRes = await api.get("/invoices");
 
-    setClients(clientsRes.data);
-    setProducts(productsRes.data);
-    setInvoices(invoicesRes.data);
+      setClients(clientsRes.data);
+      setProducts(productsRes.data);
+      setInvoices(invoicesRes.data);
+    } catch (error) {
+      toast.error("Failed to load invoices data");
+    }
   };
 
   const getStatusBadgeClass = (status: string) => {
@@ -116,21 +121,32 @@ function Invoices() {
     ];
 
     const workbook = XLSX.utils.book_new();
-
     XLSX.utils.book_append_sheet(workbook, worksheet, "Invoices");
-
     XLSX.writeFile(workbook, "invoices.xlsx");
+
+    toast.success("Invoices exported successfully");
   };
 
   const addItem = () => {
-    if (!productId || !quantity) return;
+    if (!productId || !quantity) {
+      toast.error("Please select product and quantity");
+      return;
+    }
 
     const selectedProduct = products.find((p) => p.id === Number(productId));
 
-    if (!selectedProduct) return;
+    if (!selectedProduct) {
+      toast.error("Product not found");
+      return;
+    }
 
     if (Number(quantity) <= 0) {
-      alert("Quantity must be greater than 0");
+      toast.error("Quantity must be greater than 0");
+      return;
+    }
+
+    if (Number(quantity) > selectedProduct.stock) {
+      toast.error(`Only ${selectedProduct.stock} items available in stock`);
       return;
     }
 
@@ -143,66 +159,82 @@ function Invoices() {
       },
     ]);
 
+    toast.success("Product added to invoice");
+
     setProductId("");
     setQuantity("1");
   };
 
   const removeItem = (index: number) => {
     setItems(items.filter((_, i) => i !== index));
+    toast.success("Product removed from invoice");
   };
 
   const createInvoice = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!clientId || items.length === 0) {
-      alert("Select client and add at least one product");
+      toast.error("Select client and add at least one product");
       return;
     }
 
-    await api.post("/invoices", {
-      clientId: Number(clientId),
-      tvaRate: Number(tvaRate),
-      discount: Number(discount),
-      items: items.map((item) => ({
-        productId: item.productId,
-        quantity: item.quantity,
-      })),
-    });
+    try {
+      await api.post("/invoices", {
+        clientId: Number(clientId),
+        tvaRate: Number(tvaRate),
+        discount: Number(discount),
+        items: items.map((item) => ({
+          productId: item.productId,
+          quantity: item.quantity,
+        })),
+      });
 
-    setClientId("");
-    setProductId("");
-    setQuantity("1");
-    setTvaRate("20");
-    setDiscount("0");
-    setItems([]);
+      toast.success("Invoice created successfully");
 
-    fetchData();
+      setClientId("");
+      setProductId("");
+      setQuantity("1");
+      setTvaRate("20");
+      setDiscount("0");
+      setItems([]);
+
+      fetchData();
+    } catch (error: any) {
+      const message =
+        error.response?.data?.message || "Invoice creation failed";
+
+      toast.error(message);
+    }
   };
 
   const startPayment = async (invoice: Invoice) => {
-  const response = await api.get(`/payments/invoice/${invoice.id}`);
+    try {
+      const response = await api.get(`/payments/invoice/${invoice.id}`);
+      const payments: Payment[] = response.data;
 
-  const payments: Payment[] = response.data;
+      const totalPaid = payments.reduce((sum, payment) => {
+        return sum + Number(payment.amount);
+      }, 0);
 
-  const totalPaid = payments.reduce((sum, payment) => {
-    return sum + Number(payment.amount);
-  }, 0);
+      const remaining = Number(invoice.totalTTC) - totalPaid;
 
-  const remaining = Number(invoice.totalTTC) - totalPaid;
+      setPaymentInvoice(invoice);
+      setPaymentPaidAmount(totalPaid);
+      setPaymentRemainingAmount(remaining);
+      setPaymentAmount("");
+      setPaymentMethod("CASH");
+    } catch (error) {
+      toast.error("Failed to load invoice payments");
+    }
+  };
 
-  setPaymentInvoice(invoice);
-  setPaymentPaidAmount(totalPaid);
-  setPaymentRemainingAmount(remaining);
-  setPaymentAmount("");
-  setPaymentMethod("CASH");
-};
   const cancelPayment = () => {
-  setPaymentInvoice(null);
-  setPaymentAmount("");
-  setPaymentMethod("CASH");
-  setPaymentPaidAmount(0);
-  setPaymentRemainingAmount(0);
-};
+    setPaymentInvoice(null);
+    setPaymentAmount("");
+    setPaymentMethod("CASH");
+    setPaymentPaidAmount(0);
+    setPaymentRemainingAmount(0);
+  };
 
   const addPayment = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -210,30 +242,56 @@ function Invoices() {
     if (!paymentInvoice) return;
 
     if (!paymentAmount || Number(paymentAmount) <= 0) {
-      alert("Enter a valid payment amount");
+      toast.error("Enter a valid payment amount");
       return;
     }
+
     if (Number(paymentAmount) > paymentRemainingAmount) {
-  alert(`Payment amount cannot exceed remaining amount: ${paymentRemainingAmount} DH`);
-  return;
-}
+      toast.error(
+        `Payment amount cannot exceed remaining amount: ${paymentRemainingAmount} DH`
+      );
+      return;
+    }
 
-    await api.post("/payments", {
-      invoiceId: paymentInvoice.id,
-      amount: Number(paymentAmount),
-      method: paymentMethod,
-    });
+    try {
+      await api.post("/payments", {
+        invoiceId: paymentInvoice.id,
+        amount: Number(paymentAmount),
+        method: paymentMethod,
+      });
 
-    cancelPayment();
-    fetchData();
+      toast.success("Payment added successfully");
+
+      cancelPayment();
+      fetchData();
+    } catch (error: any) {
+      const message =
+        error.response?.data?.message || "Payment operation failed";
+
+      toast.error(message);
+    }
   };
 
-  const deleteInvoice = async (id: number) => {
-    if (!confirm("Delete this invoice?")) return;
+  const requestDeleteInvoice = (id: number) => {
+  setDeleteInvoiceId(id);
+};
 
-    await api.delete(`/invoices/${id}`);
+const confirmDeleteInvoice = async () => {
+  if (!deleteInvoiceId) return;
+
+  try {
+    await api.delete(`/invoices/${deleteInvoiceId}`);
+    toast.success("Invoice deleted successfully");
+    setDeleteInvoiceId(null);
     fetchData();
-  };
+  } catch (error) {
+    toast.error("Invoice delete failed");
+  }
+};
+
+const cancelDeleteInvoice = () => {
+  setDeleteInvoiceId(null);
+};
 
   useEffect(() => {
     fetchData();
@@ -353,14 +411,14 @@ function Invoices() {
           <h3>Add Payment for Invoice #{paymentInvoice.id}</h3>
 
           <p style={{ color: "#6b7280", marginTop: 0 }}>
-  Client: <strong>{paymentInvoice.client?.name}</strong> | Total TTC:{" "}
-  <strong>{paymentInvoice.totalTTC} DH</strong> | Total Paid:{" "}
-  <strong>{paymentPaidAmount} DH</strong> | Remaining:{" "}
-  <strong>{paymentRemainingAmount} DH</strong> | Status:{" "}
-  <span className={getStatusBadgeClass(paymentInvoice.status)}>
-    {paymentInvoice.status}
-  </span>
-</p>
+            Client: <strong>{paymentInvoice.client?.name}</strong> | Total TTC:{" "}
+            <strong>{paymentInvoice.totalTTC} DH</strong> | Total Paid:{" "}
+            <strong>{paymentPaidAmount} DH</strong> | Remaining:{" "}
+            <strong>{paymentRemainingAmount} DH</strong> | Status:{" "}
+            <span className={getStatusBadgeClass(paymentInvoice.status)}>
+              {paymentInvoice.status}
+            </span>
+          </p>
 
           <div className="form-grid grid-3">
             <input
@@ -481,7 +539,7 @@ function Invoices() {
 
                     <button
                       className="danger-button"
-                      onClick={() => deleteInvoice(invoice.id)}
+                     onClick={() => requestDeleteInvoice(invoice.id)}
                     >
                       Delete
                     </button>
@@ -492,6 +550,16 @@ function Invoices() {
           )}
         </tbody>
       </table>
+      {deleteInvoiceId && (
+  <ConfirmModal
+    title="Delete Invoice"
+    message="Are you sure you want to delete this invoice? This action cannot be undone."
+    confirmText="Delete"
+    cancelText="Cancel"
+    onConfirm={confirmDeleteInvoice}
+    onCancel={cancelDeleteInvoice}
+  />
+)}
     </div>
   );
 }

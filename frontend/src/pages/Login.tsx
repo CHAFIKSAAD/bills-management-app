@@ -1,5 +1,6 @@
 ﻿import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
 import api from "../services/api";
 
 function Login() {
@@ -7,13 +8,16 @@ function Login() {
 
   const [email, setEmail] = useState("saad@test.com");
   const [password, setPassword] = useState("123456");
-  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   const login = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    setError("");
+    if (!email || !password) {
+      toast.error("Veuillez remplir tous les champs");
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -25,9 +29,10 @@ function Login() {
       localStorage.setItem("token", response.data.token);
       localStorage.setItem("user", JSON.stringify(response.data.user));
 
+      toast.success("Connexion réussie");
       navigate("/dashboard");
     } catch (err) {
-      setError("Email ou mot de passe incorrect");
+      toast.error("Email ou mot de passe incorrect");
     } finally {
       setLoading(false);
     }
@@ -36,16 +41,18 @@ function Login() {
   return (
     <div className="login-page">
       <div className="login-left">
-       <div className="login-brand">
-  <img src="/massmedia-logo.jpg" alt="MASSMEDIA" className="login-company-logo" />
-  <div>
-    <h1>MASSMEDIA</h1>
-    <p>Bills Management System</p>
-  </div>
-</div>
+        <div className="login-brand">
+          <img src="/massmedia-logo.jpg" alt="MASSMEDIA" className="login-company-logo" />
+
+          <div>
+            <h1>MASSMEDIA</h1>
+            <p>Bills Management System</p>
+          </div>
+        </div>
 
         <div className="login-info">
           <h2>Gestion de facturation moderne</h2>
+
           <p>
             Gérez vos clients, produits, factures, paiements, exports PDF/Excel
             et statistiques depuis une seule application.
@@ -65,9 +72,8 @@ function Login() {
       <div className="login-right">
         <form onSubmit={login} className="login-card">
           <h2>Connexion</h2>
-          <p>Connectez-vous à votre espace de gestion</p>
 
-          {error && <div className="login-error">{error}</div>}
+          <p>Connectez-vous à votre espace de gestion</p>
 
           <label>Email</label>
           <input
