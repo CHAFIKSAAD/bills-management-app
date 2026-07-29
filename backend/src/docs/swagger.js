@@ -93,6 +93,118 @@
     },
   },
   paths: {
+        "/api/profile": {
+      get: {
+        summary: "Get current user profile",
+        tags: ["Profile"],
+        security: [{ bearerAuth: [] }],
+        responses: {
+          200: {
+            description: "User profile retrieved successfully",
+          },
+          401: {
+            description: "Unauthorized",
+          },
+          404: {
+            description: "User not found",
+          },
+          500: {
+            description: "Server error",
+          },
+        },
+      },
+
+      put: {
+        summary: "Update current user profile",
+        tags: ["Profile"],
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                required: ["name", "email"],
+                properties: {
+                  name: {
+                    type: "string",
+                    example: "Saad Admin",
+                  },
+                  email: {
+                    type: "string",
+                    example: "saad@test.com",
+                  },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: {
+            description: "Profile updated successfully",
+          },
+          400: {
+            description: "Invalid data or email already used",
+          },
+          401: {
+            description: "Unauthorized",
+          },
+          500: {
+            description: "Server error",
+          },
+        },
+      },
+    },
+
+    "/api/profile/password": {
+      put: {
+        summary: "Change current user password",
+        tags: ["Profile"],
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                required: ["currentPassword", "newPassword", "confirmPassword"],
+                properties: {
+                  currentPassword: {
+                    type: "string",
+                    example: "123456",
+                  },
+                  newPassword: {
+                    type: "string",
+                    example: "123456",
+                  },
+                  confirmPassword: {
+                    type: "string",
+                    example: "123456",
+                  },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: {
+            description: "Password changed successfully",
+          },
+          400: {
+            description: "Invalid password data",
+          },
+          401: {
+            description: "Current password incorrect or unauthorized",
+          },
+          404: {
+            description: "User not found",
+          },
+          500: {
+            description: "Server error",
+          },
+        },
+      },
+    },
     "/": {
       get: {
         summary: "API health check",
