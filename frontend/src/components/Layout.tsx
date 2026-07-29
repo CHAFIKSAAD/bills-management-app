@@ -1,4 +1,5 @@
-﻿import { NavLink, Outlet, useLocation } from "react-router-dom";
+﻿import { useState } from "react";
+import { NavLink, Outlet, useLocation } from "react-router-dom";
 
 const pageTitles: Record<string, string> = {
   "/dashboard": "Dashboard",
@@ -12,23 +13,28 @@ const pageTitles: Record<string, string> = {
 
 function Layout() {
   const location = useLocation();
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   const storedUser = localStorage.getItem("user");
   const user = storedUser ? JSON.parse(storedUser) : null;
 
-  const userName = user?.name || "User";
   const formatRole = (role: string) => {
-  if (role === "USER") return "Utilisateur";
-  if (role === "ADMIN") return "Admin";
-  return role;
-};
+    if (role === "USER") return "Utilisateur";
+    if (role === "ADMIN") return "Admin";
+    return role;
+  };
 
-const userRole = formatRole(user?.role || "USER");
+  const userName = user?.name || "User";
+  const userRole = formatRole(user?.role || "USER");
   const userInitial = userName.charAt(0).toUpperCase();
 
   const currentPage = location.pathname.startsWith("/invoices/")
     ? "Invoice Details"
     : pageTitles[location.pathname] || "Bills App";
+
+  const closeMobileSidebar = () => {
+    setMobileSidebarOpen(false);
+  };
 
   const logout = () => {
     localStorage.removeItem("token");
@@ -38,9 +44,24 @@ const userRole = formatRole(user?.role || "USER");
 
   return (
     <div className="app-layout">
-      <aside className="sidebar no-print">
+      {mobileSidebarOpen && (
+        <div
+          className="mobile-overlay no-print"
+          onClick={closeMobileSidebar}
+        />
+      )}
+
+      <aside
+        className={`sidebar no-print ${
+          mobileSidebarOpen ? "mobile-open" : ""
+        }`}
+      >
         <div className="brand">
-          <img src="/massmedia-logo.jpg" alt="MASSMEDIA" className="brand-logo-img" />
+          <img
+            src="/massmedia-logo.jpg"
+            alt="MASSMEDIA"
+            className="brand-logo-img"
+          />
 
           <div>
             <h2>MASSMEDIA</h2>
@@ -51,6 +72,7 @@ const userRole = formatRole(user?.role || "USER");
         <nav className="sidebar-nav">
           <NavLink
             to="/dashboard"
+            onClick={closeMobileSidebar}
             className={({ isActive }) =>
               isActive ? "sidebar-link active-link" : "sidebar-link"
             }
@@ -61,6 +83,7 @@ const userRole = formatRole(user?.role || "USER");
 
           <NavLink
             to="/clients"
+            onClick={closeMobileSidebar}
             className={({ isActive }) =>
               isActive ? "sidebar-link active-link" : "sidebar-link"
             }
@@ -71,6 +94,7 @@ const userRole = formatRole(user?.role || "USER");
 
           <NavLink
             to="/categories"
+            onClick={closeMobileSidebar}
             className={({ isActive }) =>
               isActive ? "sidebar-link active-link" : "sidebar-link"
             }
@@ -81,6 +105,7 @@ const userRole = formatRole(user?.role || "USER");
 
           <NavLink
             to="/products"
+            onClick={closeMobileSidebar}
             className={({ isActive }) =>
               isActive ? "sidebar-link active-link" : "sidebar-link"
             }
@@ -91,6 +116,7 @@ const userRole = formatRole(user?.role || "USER");
 
           <NavLink
             to="/invoices"
+            onClick={closeMobileSidebar}
             className={({ isActive }) =>
               isActive ? "sidebar-link active-link" : "sidebar-link"
             }
@@ -101,6 +127,7 @@ const userRole = formatRole(user?.role || "USER");
 
           <NavLink
             to="/payments"
+            onClick={closeMobileSidebar}
             className={({ isActive }) =>
               isActive ? "sidebar-link active-link" : "sidebar-link"
             }
@@ -111,6 +138,7 @@ const userRole = formatRole(user?.role || "USER");
 
           <NavLink
             to="/profile"
+            onClick={closeMobileSidebar}
             className={({ isActive }) =>
               isActive ? "sidebar-link active-link" : "sidebar-link"
             }
@@ -119,7 +147,7 @@ const userRole = formatRole(user?.role || "USER");
             Profile
           </NavLink>
         </nav>
-           
+
         <button className="logout-button" onClick={logout}>
           Logout
         </button>
@@ -127,9 +155,18 @@ const userRole = formatRole(user?.role || "USER");
 
       <main className="main-content">
         <header className="topbar no-print">
-          <div>
-            <p className="topbar-subtitle">Bills Management App</p>
-            <h2>{currentPage}</h2>
+          <div className="topbar-left">
+            <button
+              className="mobile-menu-button"
+              onClick={() => setMobileSidebarOpen(true)}
+            >
+              ☰
+            </button>
+
+            <div>
+              <p className="topbar-subtitle">Bills Management App</p>
+              <h2>{currentPage}</h2>
+            </div>
           </div>
 
           <div className="topbar-user">
