@@ -934,3 +934,79 @@ select:focus {
   opacity: 0.45;
   cursor: not-allowed;
 }
+
+/* Profile page */
+
+.profile-grid {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 20px;
+}
+
+.profile-summary-card {
+  text-align: center;
+}
+
+.profile-avatar {
+  width: 90px;
+  height: 90px;
+  border-radius: 24px;
+  background: var(--massmedia-red);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 42px;
+  font-weight: 900;
+  margin: 0 auto 18px;
+  box-shadow: 0 12px 28px rgba(229, 37, 33, 0.25);
+}
+
+.profile-summary-card h2 {
+  margin: 0;
+  color: #111827;
+}
+
+.profile-summary-card p {
+  margin: 8px 0 20px;
+  color: #6b7280;
+}
+
+.profile-info-list {
+  display: grid;
+  gap: 12px;
+  margin-top: 18px;
+  text-align: left;
+}
+
+.profile-info-list div {
+  background: #f9fafb;
+  border: 1px solid #eef2f7;
+  border-radius: 14px;
+  padding: 12px;
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.profile-info-list span {
+  color: #6b7280;
+  font-weight: 700;
+}
+
+.profile-info-list strong {
+  color: #111827;
+}
+
+label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 700;
+  color: #374151;
+}
+
+@media (max-width: 900px) {
+  .profile-grid {
+    grid-template-columns: 1fr;
+  }
+}

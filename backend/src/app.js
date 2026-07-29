@@ -10,6 +10,7 @@ const paymentRoutes = require("./routes/payment.routes");
 const dashboardRoutes = require("./routes/dashboard.routes");
 const swaggerUi = require("swagger-ui-express");
 const swaggerDocument = require("./docs/swagger");
+const profileRoutes = require("./routes/profile.routes");
 const app = express();
 
 app.use(cors());
@@ -28,5 +29,6 @@ app.use("/api/products", productRoutes);
 app.use("/api/invoices", invoiceRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/profile", profileRoutes);
 
 module.exports = app;

@@ -7,6 +7,7 @@ const pageTitles: Record<string, string> = {
   "/products": "Products",
   "/invoices": "Invoices",
   "/payments": "Payments",
+  "/profile": "Profile",
 };
 
 function Layout() {
@@ -16,7 +17,13 @@ function Layout() {
   const user = storedUser ? JSON.parse(storedUser) : null;
 
   const userName = user?.name || "User";
-  const userRole = user?.role || "USER";
+  const formatRole = (role: string) => {
+  if (role === "USER") return "Utilisateur";
+  if (role === "ADMIN") return "Admin";
+  return role;
+};
+
+const userRole = formatRole(user?.role || "USER");
   const userInitial = userName.charAt(0).toUpperCase();
 
   const currentPage = location.pathname.startsWith("/invoices/")
@@ -101,8 +108,18 @@ function Layout() {
             <span>💳</span>
             Payments
           </NavLink>
-        </nav>
 
+          <NavLink
+            to="/profile"
+            className={({ isActive }) =>
+              isActive ? "sidebar-link active-link" : "sidebar-link"
+            }
+          >
+            <span>👤</span>
+            Profile
+          </NavLink>
+        </nav>
+           
         <button className="logout-button" onClick={logout}>
           Logout
         </button>
