@@ -33,6 +33,9 @@ function Payments() {
 
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const itemsPerPage = 5;
 
   const fetchData = async () => {
     try {
@@ -68,11 +71,46 @@ function Payments() {
     });
   }, [payments, search, statusFilter]);
 
+  const totalPages = Math.ceil(filteredPayments.length / itemsPerPage);
+
+  const paginatedPayments = filteredPayments.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  const getInvoicePaidAmount = (selectedInvoiceId: number) => {
+    return payments
+      .filter((payment) => payment.invoiceId === selectedInvoiceId)
+      .reduce((sum, payment) => sum + Number(payment.amount), 0);
+  };
+
   const addPayment = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!invoiceId || !amount || Number(amount) <= 0) {
       toast.error("Please select invoice and enter a valid amount");
+      return;
+    }
+
+    const selectedInvoice = invoices.find(
+      (invoice) => invoice.id === Number(invoiceId)
+    );
+
+    if (!selectedInvoice) {
+      toast.error("Invoice not found");
+      return;
+    }
+
+    if (selectedInvoice.status === "PAID") {
+      toast.error("This invoice is already paid");
+      return;
+    }
+
+    const totalPaid = getInvoicePaidAmount(selectedInvoice.id);
+    const remaining = Number(selectedInvoice.totalTTC) - totalPaid;
+
+    if (Number(amount) > remaining) {
+      toast.error(`Payment amount cannot exceed remaining amount: ${remaining} DH`);
       return;
     }
 
@@ -106,6 +144,10 @@ function Payments() {
     fetchData();
   }, []);
 
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, statusFilter]);
+
   return (
     <div>
       <div className="card">
@@ -123,11 +165,18 @@ function Payments() {
           <select value={invoiceId} onChange={(e) => setInvoiceId(e.target.value)}>
             <option value="">Select invoice</option>
 
-            {invoices.map((invoice) => (
-              <option key={invoice.id} value={invoice.id}>
-                Invoice #{invoice.id} - {invoice.client?.name} - {invoice.totalTTC} DH - {invoice.status}
-              </option>
-            ))}
+            {invoices
+              .filter((invoice) => invoice.status !== "PAID")
+              .map((invoice) => {
+                const totalPaid = getInvoicePaidAmount(invoice.id);
+                const remaining = Number(invoice.totalTTC) - totalPaid;
+
+                return (
+                  <option key={invoice.id} value={invoice.id}>
+                    Invoice #{invoice.id} - {invoice.client?.name} - Remaining {remaining} DH - {invoice.status}
+                  </option>
+                );
+              })}
           </select>
 
           <input
@@ -182,6 +231,10 @@ function Payments() {
             Reset filters
           </button>
         </div>
+
+        <div className="table-counter" style={{ marginTop: "12px" }}>
+          {filteredPayments.length} payment(s) found
+        </div>
       </div>
 
       <table className="table">
@@ -198,14 +251,14 @@ function Payments() {
         </thead>
 
         <tbody>
-          {filteredPayments.length === 0 ? (
+          {paginatedPayments.length === 0 ? (
             <tr>
               <td colSpan={7}>
                 <div className="empty-state">No payments found</div>
               </td>
             </tr>
           ) : (
-            filteredPayments.map((payment) => (
+            paginatedPayments.map((payment) => (
               <tr key={payment.id}>
                 <td>{payment.id}</td>
                 <td>#{payment.invoiceId}</td>
@@ -223,6 +276,30 @@ function Payments() {
           )}
         </tbody>
       </table>
+
+      {totalPages > 1 && (
+        <div className="pagination">
+          <button
+            className="secondary-button"
+            disabled={currentPage === 1}
+            onClick={() => setCurrentPage(currentPage - 1)}
+          >
+            Previous
+          </button>
+
+          <span>
+            Page {currentPage} / {totalPages}
+          </span>
+
+          <button
+            className="secondary-button"
+            disabled={currentPage === totalPages}
+            onClick={() => setCurrentPage(currentPage + 1)}
+          >
+            Next
+          </button>
+        </div>
+      )}
     </div>
   );
 }

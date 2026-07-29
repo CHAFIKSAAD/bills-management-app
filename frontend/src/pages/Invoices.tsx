@@ -57,13 +57,18 @@ function Invoices() {
 
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const itemsPerPage = 5;
 
   const [paymentInvoice, setPaymentInvoice] = useState<Invoice | null>(null);
   const [paymentAmount, setPaymentAmount] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("CASH");
   const [paymentPaidAmount, setPaymentPaidAmount] = useState(0);
   const [paymentRemainingAmount, setPaymentRemainingAmount] = useState(0);
+
   const [deleteInvoiceId, setDeleteInvoiceId] = useState<number | null>(null);
+
   const fetchData = async () => {
     try {
       const clientsRes = await api.get("/clients");
@@ -86,8 +91,10 @@ function Invoices() {
 
   const filteredInvoices = useMemo(() => {
     return invoices.filter((invoice) => {
-      const matchClient = invoice.client?.name
-        ?.toLowerCase()
+      const clientName = invoice.client?.name || "";
+
+      const matchClient = clientName
+        .toLowerCase()
         .includes(search.toLowerCase());
 
       const matchStatus =
@@ -96,6 +103,13 @@ function Invoices() {
       return matchClient && matchStatus;
     });
   }, [invoices, search, statusFilter]);
+
+  const totalPages = Math.ceil(filteredInvoices.length / itemsPerPage);
+
+  const paginatedInvoices = filteredInvoices.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
   const exportInvoicesToExcel = () => {
     const data = filteredInvoices.map((invoice) => ({
@@ -200,9 +214,7 @@ function Invoices() {
 
       fetchData();
     } catch (error: any) {
-      const message =
-        error.response?.data?.message || "Invoice creation failed";
-
+      const message = error.response?.data?.message || "Invoice creation failed";
       toast.error(message);
     }
   };
@@ -265,37 +277,39 @@ function Invoices() {
       cancelPayment();
       fetchData();
     } catch (error: any) {
-      const message =
-        error.response?.data?.message || "Payment operation failed";
-
+      const message = error.response?.data?.message || "Payment operation failed";
       toast.error(message);
     }
   };
 
   const requestDeleteInvoice = (id: number) => {
-  setDeleteInvoiceId(id);
-};
+    setDeleteInvoiceId(id);
+  };
 
-const confirmDeleteInvoice = async () => {
-  if (!deleteInvoiceId) return;
+  const confirmDeleteInvoice = async () => {
+    if (!deleteInvoiceId) return;
 
-  try {
-    await api.delete(`/invoices/${deleteInvoiceId}`);
-    toast.success("Invoice deleted successfully");
+    try {
+      await api.delete(`/invoices/${deleteInvoiceId}`);
+      toast.success("Invoice deleted successfully");
+      setDeleteInvoiceId(null);
+      fetchData();
+    } catch (error) {
+      toast.error("Invoice delete failed");
+    }
+  };
+
+  const cancelDeleteInvoice = () => {
     setDeleteInvoiceId(null);
-    fetchData();
-  } catch (error) {
-    toast.error("Invoice delete failed");
-  }
-};
-
-const cancelDeleteInvoice = () => {
-  setDeleteInvoiceId(null);
-};
+  };
 
   useEffect(() => {
     fetchData();
   }, []);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, statusFilter]);
 
   return (
     <div>
@@ -481,6 +495,10 @@ const cancelDeleteInvoice = () => {
             Reset filters
           </button>
         </div>
+
+        <div className="table-counter" style={{ marginTop: "12px" }}>
+          {filteredInvoices.length} invoice(s) found
+        </div>
       </div>
 
       <table className="table">
@@ -498,14 +516,14 @@ const cancelDeleteInvoice = () => {
         </thead>
 
         <tbody>
-          {filteredInvoices.length === 0 ? (
+          {paginatedInvoices.length === 0 ? (
             <tr>
               <td colSpan={8}>
                 <div className="empty-state">No invoices found</div>
               </td>
             </tr>
           ) : (
-            filteredInvoices.map((invoice) => (
+            paginatedInvoices.map((invoice) => (
               <tr key={invoice.id}>
                 <td>{invoice.id}</td>
                 <td>{invoice.client?.name}</td>
@@ -539,7 +557,7 @@ const cancelDeleteInvoice = () => {
 
                     <button
                       className="danger-button"
-                     onClick={() => requestDeleteInvoice(invoice.id)}
+                      onClick={() => requestDeleteInvoice(invoice.id)}
                     >
                       Delete
                     </button>
@@ -550,16 +568,41 @@ const cancelDeleteInvoice = () => {
           )}
         </tbody>
       </table>
+
+      {totalPages > 1 && (
+        <div className="pagination">
+          <button
+            className="secondary-button"
+            disabled={currentPage === 1}
+            onClick={() => setCurrentPage(currentPage - 1)}
+          >
+            Previous
+          </button>
+
+          <span>
+            Page {currentPage} / {totalPages}
+          </span>
+
+          <button
+            className="secondary-button"
+            disabled={currentPage === totalPages}
+            onClick={() => setCurrentPage(currentPage + 1)}
+          >
+            Next
+          </button>
+        </div>
+      )}
+
       {deleteInvoiceId && (
-  <ConfirmModal
-    title="Delete Invoice"
-    message="Are you sure you want to delete this invoice? This action cannot be undone."
-    confirmText="Delete"
-    cancelText="Cancel"
-    onConfirm={confirmDeleteInvoice}
-    onCancel={cancelDeleteInvoice}
-  />
-)}
+        <ConfirmModal
+          title="Delete Invoice"
+          message="Are you sure you want to delete this invoice? This action cannot be undone."
+          confirmText="Delete"
+          cancelText="Cancel"
+          onConfirm={confirmDeleteInvoice}
+          onCancel={cancelDeleteInvoice}
+        />
+      )}
     </div>
   );
 }
