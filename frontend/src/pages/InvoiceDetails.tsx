@@ -45,7 +45,26 @@ type Invoice = {
   items?: InvoiceItem[];
   payments?: Payment[];
 };
-
+type CompanySettings = {
+  companyName: string;
+  tagline: string;
+  email: string;
+  phone: string;
+  address: string;
+  city: string;
+  defaultTva: string;
+  currency: string;
+};
+const defaultCompanySettings: CompanySettings = {
+  companyName: "MASSMEDIA",
+  tagline: "Impacting business",
+  email: "contact@massmedia.ma",
+  phone: "+212 6 00 00 00 00",
+  address: "Casablanca, Maroc",
+  city: "Casablanca",
+  defaultTva: "20",
+  currency: "DH",
+};
 function InvoiceDetails() {
   const { id } = useParams();
   const [invoice, setInvoice] = useState<Invoice | null>(null);
@@ -73,10 +92,18 @@ function InvoiceDetails() {
     invoice?.payments?.reduce((sum, payment) => sum + Number(payment.amount), 0) || 0;
 
   const remaining = invoice ? Number(invoice.totalTTC) - totalPaid : 0;
-
+  const [companySettings, setCompanySettings] = useState<CompanySettings>(
+  defaultCompanySettings
+);
   useEffect(() => {
+    const savedSettings = localStorage.getItem("companySettings");
+
+  if (savedSettings) {
+    setCompanySettings(JSON.parse(savedSettings));
+  }
+
     fetchInvoice();
-  }, []);
+  }, [id]);
 
   if (!invoice) {
     return (
@@ -104,11 +131,11 @@ function InvoiceDetails() {
             <img src="/massmedia-logo.jpg" alt="MASSMEDIA" className="invoice-company-logo" />
 
             <div>
-              <h1>MASSMEDIA</h1>
-              <p>Solutions digitales & services informatiques</p>
-              <p>Casablanca, Maroc</p>
-              <p>Email: contact@massmedia.ma</p>
-              <p>Tél: +212 6 00 00 00 00</p>
+              <h1>{companySettings.companyName}</h1>
+<p>{companySettings.tagline}</p>
+<p>{companySettings.address}</p>
+<p>Email: {companySettings.email}</p>
+<p>Tél: {companySettings.phone}</p>
             </div>
           </div>
 
@@ -208,7 +235,7 @@ function InvoiceDetails() {
 
             <div className="total-line">
               <span>Total HT</span>
-              <strong>{invoice.totalHT} DH</strong>
+              <strong>{invoice.totalHT} {companySettings.currency}</strong>
             </div>
 
             <div className="total-line">

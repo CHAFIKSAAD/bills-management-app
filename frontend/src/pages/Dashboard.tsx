@@ -1,4 +1,17 @@
 ﻿import { useEffect, useMemo, useState } from "react";
+import {
+  Bar,
+  BarChart,
+  Cell,
+  Legend,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
+import toast from "react-hot-toast";
 import api from "../services/api";
 
 type Client = {
@@ -10,59 +23,120 @@ type Invoice = {
   id: number;
   totalTTC: number;
   status: string;
-  createdAt: string;
   client?: Client;
-};
-
-type Category = {
-  id: number;
-  name: string;
 };
 
 type Product = {
   id: number;
   name: string;
   stock: number;
-  price: number;
-  category?: Category;
 };
 
-type DashboardStats = {
-  clientsCount: number;
-  productsCount: number;
-  invoicesCount: number;
-  paidInvoicesCount: number;
-  partialInvoicesCount: number;
-  unpaidInvoicesCount: number;
-  totalRevenue: number;
-  totalStock: number;
-};
+type DashboardStats = Record<string, any>;
 
 function Dashboard() {
-  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [stats, setStats] = useState<DashboardStats>({});
+  const [clients, setClients] = useState<Client[]>([]);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
-  const [error, setError] = useState("");
 
-  const fetchDashboardData = async () => {
+  const [viewMode, setViewMode] = useState(
+    localStorage.getItem("dashboardViewMode") || "cards"
+  );
+
+  const redColors = ["#ef2424", "#b91c1c", "#f97316", "#16a34a", "#2563eb"];
+
+  const getNumber = (...keys: string[]) => {
+    for (const key of keys) {
+      if (stats[key] !== undefined && stats[key] !== null) {
+        return Number(stats[key]);
+      }
+    }
+
+    return 0;
+  };
+
+  const dashboardValues = useMemo(() => {
+  const calculatedRevenue = invoices.reduce((sum, invoice) => {
+    return sum + Number(invoice.totalTTC);
+  }, 0);
+
+  const calculatedStock = products.reduce((sum, product) => {
+    return sum + Number(product.stock);
+  }, 0);
+
+  const calculatedPaid = invoices.filter(
+    (invoice) => invoice.status === "PAID"
+  ).length;
+
+  const calculatedPartial = invoices.filter(
+    (invoice) => invoice.status === "PARTIAL"
+  ).length;
+
+  const calculatedUnpaid = invoices.filter(
+    (invoice) => invoice.status === "UNPAID"
+  ).length;
+
+  return {
+    clients: getNumber("clients", "totalClients", "clientsCount") || clients.length,
+    products: getNumber("products", "totalProducts", "productsCount") || products.length,
+    invoices: getNumber("invoices", "totalInvoices", "invoicesCount") || invoices.length,
+    revenue: getNumber("revenue", "revenues", "totalRevenue") || calculatedRevenue,
+    stock: getNumber("stock", "totalStock") || calculatedStock,
+    paid: getNumber("paidInvoices", "paid", "payees") || calculatedPaid,
+    partial: getNumber("partialInvoices", "partial", "partielles") || calculatedPartial,
+    unpaid: getNumber("unpaidInvoices", "unpaid", "impayees") || calculatedUnpaid,
+  };
+}, [stats, clients, products, invoices]);
+
+  const mainStats = [
+    { label: "Clients", value: dashboardValues.clients, suffix: "" },
+    { label: "Produits", value: dashboardValues.products, suffix: "" },
+    { label: "Factures", value: dashboardValues.invoices, suffix: "" },
+    { label: "Revenus", value: dashboardValues.revenue, suffix: " DH" },
+    { label: "Stock total", value: dashboardValues.stock, suffix: "" },
+    { label: "Payées", value: dashboardValues.paid, suffix: "" },
+    { label: "Partielles", value: dashboardValues.partial, suffix: "" },
+    { label: "Impayées", value: dashboardValues.unpaid, suffix: "" },
+  ];
+
+  const invoiceStatusData = [
+    { name: "Payées", value: dashboardValues.paid },
+    { name: "Partielles", value: dashboardValues.partial },
+    { name: "Impayées", value: dashboardValues.unpaid },
+  ];
+
+  const barData = [
+    { name: "Clients", value: dashboardValues.clients },
+    { name: "Produits", value: dashboardValues.products },
+    { name: "Factures", value: dashboardValues.invoices },
+    { name: "Stock", value: dashboardValues.stock },
+  ];
+
+  const revenueData = [
+    {
+      name: "Revenus",
+      value: dashboardValues.revenue,
+    },
+  ];
+
+  const recentInvoices = invoices.slice(0, 5);
+
+  const lowStockProducts = products.filter((product) => product.stock <= 5);
+
+  const fetchData = async () => {
     try {
       const statsRes = await api.get("/dashboard");
-      const invoicesRes = await api.get("/invoices");
-      const productsRes = await api.get("/products");
+const clientsRes = await api.get("/clients");
+const invoicesRes = await api.get("/invoices");
+const productsRes = await api.get("/products");
 
-      setStats(statsRes.data);
-      setInvoices(invoicesRes.data);
-      setProducts(productsRes.data);
-    } catch (err: any) {
-      console.log("Dashboard error:", err);
-
-      if (err.response?.status === 401) {
-        localStorage.removeItem("token");
-        window.location.href = "/";
-        return;
-      }
-
-      setError("Impossible de charger le dashboard. Vérifie que le backend et Docker sont lancés.");
+setStats(statsRes.data);
+setClients(clientsRes.data);
+setInvoices(invoicesRes.data);
+setProducts(productsRes.data);
+    } catch (error) {
+      toast.error("Failed to load dashboard data");
     }
   };
 
@@ -72,104 +146,130 @@ function Dashboard() {
     return "badge badge-unpaid";
   };
 
-  const getStockBadgeClass = (stock: number) => {
-    if (stock === 0) return "badge badge-unpaid";
-    if (stock <= 5) return "badge badge-partial";
-    return "badge badge-paid";
+  const changeViewMode = (mode: string) => {
+    setViewMode(mode);
+    localStorage.setItem("dashboardViewMode", mode);
   };
-
-  const getStockLabel = (stock: number) => {
-    if (stock === 0) return "OUT OF STOCK";
-    if (stock <= 5) return "LOW STOCK";
-    return "IN STOCK";
-  };
-
-  const recentInvoices = useMemo(() => {
-    return [...invoices]
-      .sort((a, b) => b.id - a.id)
-      .slice(0, 5);
-  }, [invoices]);
-
-  const lowStockProducts = useMemo(() => {
-    return products
-      .filter((product) => product.stock <= 5)
-      .sort((a, b) => a.stock - b.stock)
-      .slice(0, 5);
-  }, [products]);
 
   useEffect(() => {
-    fetchDashboardData();
+    fetchData();
   }, []);
-
-  if (error) {
-    return (
-      <div className="card">
-        <h3>Erreur</h3>
-        <p style={{ color: "red", fontWeight: "bold" }}>{error}</p>
-      </div>
-    );
-  }
-
-  if (!stats) {
-    return (
-      <div className="card">
-        <p>Chargement...</p>
-      </div>
-    );
-  }
 
   return (
     <div>
-      <div className="stats-grid">
-        <div className="stat-card">
-          <h3>Clients</h3>
-          <p>{stats.clientsCount}</p>
+      <div className="dashboard-header-card">
+        <div>
+          <h3>Dashboard Overview</h3>
+          <p>
+            Visualisez les statistiques sous forme de cartes, cercles ou graphes.
+          </p>
         </div>
 
-        <div className="stat-card">
-          <h3>Produits</h3>
-          <p>{stats.productsCount}</p>
-        </div>
-
-        <div className="stat-card">
-          <h3>Factures</h3>
-          <p>{stats.invoicesCount}</p>
-        </div>
-
-        <div className="stat-card">
-          <h3>Revenus</h3>
-          <p>{stats.totalRevenue} DH</p>
-        </div>
-
-        <div className="stat-card">
-          <h3>Stock total</h3>
-          <p>{stats.totalStock}</p>
-        </div>
-
-        <div className="stat-card">
-          <h3>Payees</h3>
-          <p>{stats.paidInvoicesCount}</p>
-        </div>
-
-        <div className="stat-card">
-          <h3>Partielles</h3>
-          <p>{stats.partialInvoicesCount}</p>
-        </div>
-
-        <div className="stat-card">
-          <h3>Impayees</h3>
-          <p>{stats.unpaidInvoicesCount}</p>
-        </div>
+        <select
+          className="dashboard-view-select"
+          value={viewMode}
+          onChange={(e) => changeViewMode(e.target.value)}
+        >
+          <option value="cards">Cards</option>
+          <option value="circles">Cercles</option>
+          <option value="charts">Graphes</option>
+        </select>
       </div>
 
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "1fr 1fr",
-          gap: "22px",
-          marginTop: "28px",
-        }}
-      >
+      {viewMode === "cards" && (
+        <div className="stats-grid">
+          {mainStats.map((item) => (
+            <div className="stat-card" key={item.label}>
+              <h3>{item.label}</h3>
+              <p>
+                {item.value}
+                {item.suffix}
+              </p>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {viewMode === "circles" && (
+        <div className="circle-stats-grid">
+          {mainStats.map((item, index) => (
+            <div className="circle-stat-card" key={item.label}>
+              <div
+                className="circle-stat"
+                style={{
+                  background: `conic-gradient(${redColors[index % redColors.length]} 0deg 300deg, #fee2e2 300deg 360deg)`,
+                }}
+              >
+                <div className="circle-stat-inner">
+                  <strong>
+                    {item.value}
+                    {item.suffix}
+                  </strong>
+                </div>
+              </div>
+
+              <h3>{item.label}</h3>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {viewMode === "charts" && (
+        <div className="dashboard-charts-grid">
+          <div className="card chart-card">
+            <h3>Statistiques générales</h3>
+
+            <ResponsiveContainer width="100%" height={280}>
+              <BarChart data={barData}>
+                <XAxis dataKey="name" />
+                <YAxis />
+                <Tooltip />
+                <Bar dataKey="value" fill="#ef2424" radius={[8, 8, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+
+          <div className="card chart-card">
+            <h3>État des factures</h3>
+
+            <ResponsiveContainer width="100%" height={280}>
+              <PieChart>
+                <Pie
+                  data={invoiceStatusData}
+                  dataKey="value"
+                  nameKey="name"
+                  cx="50%"
+                  cy="50%"
+                  outerRadius={90}
+                  label
+                >
+                  {invoiceStatusData.map((_, index) => (
+                    <Cell key={index} fill={redColors[index]} />
+                  ))}
+                </Pie>
+
+                <Tooltip />
+                <Legend />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+
+          <div className="card chart-card">
+            <h3>Revenus</h3>
+
+            <ResponsiveContainer width="100%" height={240}>
+              <BarChart data={revenueData}>
+                <XAxis dataKey="name" />
+                <YAxis />
+                <Tooltip />
+                <Bar dataKey="value" fill="#b91c1c" radius={[8, 8, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      )}
+
+      <div className="dashboard-bottom-grid">
         <div className="card">
           <h3>Dernières factures</h3>
 
@@ -233,9 +333,11 @@ function Dashboard() {
                     <td>{product.name}</td>
                     <td>{product.stock}</td>
                     <td>
-                      <span className={getStockBadgeClass(product.stock)}>
-                        {getStockLabel(product.stock)}
-                      </span>
+                      {product.stock === 0 ? (
+                        <span className="badge badge-unpaid">OUT OF STOCK</span>
+                      ) : (
+                        <span className="badge badge-partial">LOW STOCK</span>
+                      )}
                     </td>
                   </tr>
                 ))

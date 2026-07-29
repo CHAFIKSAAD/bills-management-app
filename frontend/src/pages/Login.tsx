@@ -39,9 +39,17 @@ function Login() {
   };
 
   return (
-    <div className="lamp-login-page">
-      <div className="lamp-login-wrapper">
-        <div className="cute-lamp-zone">
+    <div className="massmedia-login-page">
+      <div className="massmedia-login-left">
+        <div className="massmedia-login-brand">
+          <img src="/massmedia-logo.jpg" alt="MASSMEDIA" />
+          <div>
+            <h1>MASSMEDIA</h1>
+            <p>Bills Management System</p>
+          </div>
+        </div>
+
+        <div className="massmedia-lamp-zone">
           <div className="lamp-light"></div>
 
           <div className="cute-lamp">
@@ -59,15 +67,27 @@ function Login() {
           </div>
         </div>
 
-        <form onSubmit={login} className="lamp-login-card">
-          <img
-            src="/massmedia-logo.jpg"
-            alt="MASSMEDIA"
-            className="lamp-login-logo"
-          />
+        <div className="massmedia-login-text">
+          <h2>Gestion de facturation moderne</h2>
+          <p>
+            Gérez vos clients, produits, factures, paiements, exports PDF/Excel
+            et statistiques depuis une seule application.
+          </p>
+        </div>
+      </div>
 
-          <h1>Welcome Back</h1>
-          <p>Connectez-vous à votre espace MASSMEDIA</p>
+      <div className="massmedia-login-right">
+  <div className="login-right-top">
+    <span className="login-secure-dot"></span>
+    <div>
+      <strong>Secure Billing Access</strong>
+      <p>Gestion sécurisée des factures et paiements</p>
+    </div>
+  </div>
+
+  <form onSubmit={login} className="login-card">
+          <h2>Connexion</h2>
+          <p>Connectez-vous à votre espace de gestion</p>
 
           <label>Email</label>
           <input
@@ -85,17 +105,34 @@ function Login() {
             onChange={(e) => setPassword(e.target.value)}
           />
 
-          <button type="submit" disabled={loading}>
-            {loading ? "Connexion..." : "Login"}
+          <button type="submit" className="login-button" disabled={loading}>
+            {loading ? "Connexion..." : "Se connecter"}
           </button>
 
-          <div className="lamp-login-demo">
+          <div className="login-demo">
             <strong>Compte de test</strong>
             <span>Email: saad@test.com</span>
             <span>Password: 123456</span>
           </div>
-        </form>
-      </div>
+          </form>
+
+  <div className="login-right-bottom">
+    <div>
+      <strong>PDF</strong>
+      <span>Factures</span>
+    </div>
+
+    <div>
+      <strong>Excel</strong>
+      <span>Export</span>
+    </div>
+
+    <div>
+      <strong>Stats</strong>
+      <span>Dashboard</span>
+    </div>
+  </div>
+</div>
     </div>
   );
 }

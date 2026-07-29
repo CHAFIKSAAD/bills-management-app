@@ -9,6 +9,7 @@ const pageTitles: Record<string, string> = {
   "/invoices": "Invoices",
   "/payments": "Payments",
   "/profile": "Profile",
+  "/settings": "Settings",
 };
 
 function Layout() {
@@ -45,17 +46,10 @@ function Layout() {
   return (
     <div className="app-layout">
       {mobileSidebarOpen && (
-        <div
-          className="mobile-overlay no-print"
-          onClick={closeMobileSidebar}
-        />
+        <div className="mobile-overlay no-print" onClick={closeMobileSidebar} />
       )}
 
-      <aside
-        className={`sidebar no-print ${
-          mobileSidebarOpen ? "mobile-open" : ""
-        }`}
-      >
+      <aside className={`sidebar no-print ${mobileSidebarOpen ? "mobile-open" : ""}`}>
         <div className="brand">
           <img
             src="/massmedia-logo.jpg"
@@ -70,81 +64,44 @@ function Layout() {
         </div>
 
         <nav className="sidebar-nav">
-          <NavLink
-            to="/dashboard"
-            onClick={closeMobileSidebar}
-            className={({ isActive }) =>
-              isActive ? "sidebar-link active-link" : "sidebar-link"
-            }
-          >
+          <NavLink to="/dashboard" onClick={closeMobileSidebar} className={({ isActive }) => isActive ? "sidebar-link active-link" : "sidebar-link"}>
             <span>📊</span>
             Dashboard
           </NavLink>
 
-          <NavLink
-            to="/clients"
-            onClick={closeMobileSidebar}
-            className={({ isActive }) =>
-              isActive ? "sidebar-link active-link" : "sidebar-link"
-            }
-          >
+          <NavLink to="/clients" onClick={closeMobileSidebar} className={({ isActive }) => isActive ? "sidebar-link active-link" : "sidebar-link"}>
             <span>👥</span>
             Clients
           </NavLink>
 
-          <NavLink
-            to="/categories"
-            onClick={closeMobileSidebar}
-            className={({ isActive }) =>
-              isActive ? "sidebar-link active-link" : "sidebar-link"
-            }
-          >
+          <NavLink to="/categories" onClick={closeMobileSidebar} className={({ isActive }) => isActive ? "sidebar-link active-link" : "sidebar-link"}>
             <span>🏷️</span>
             Categories
           </NavLink>
 
-          <NavLink
-            to="/products"
-            onClick={closeMobileSidebar}
-            className={({ isActive }) =>
-              isActive ? "sidebar-link active-link" : "sidebar-link"
-            }
-          >
+          <NavLink to="/products" onClick={closeMobileSidebar} className={({ isActive }) => isActive ? "sidebar-link active-link" : "sidebar-link"}>
             <span>📦</span>
             Products
           </NavLink>
 
-          <NavLink
-            to="/invoices"
-            onClick={closeMobileSidebar}
-            className={({ isActive }) =>
-              isActive ? "sidebar-link active-link" : "sidebar-link"
-            }
-          >
+          <NavLink to="/invoices" onClick={closeMobileSidebar} className={({ isActive }) => isActive ? "sidebar-link active-link" : "sidebar-link"}>
             <span>🧾</span>
             Invoices
           </NavLink>
 
-          <NavLink
-            to="/payments"
-            onClick={closeMobileSidebar}
-            className={({ isActive }) =>
-              isActive ? "sidebar-link active-link" : "sidebar-link"
-            }
-          >
+          <NavLink to="/payments" onClick={closeMobileSidebar} className={({ isActive }) => isActive ? "sidebar-link active-link" : "sidebar-link"}>
             <span>💳</span>
             Payments
           </NavLink>
 
-          <NavLink
-            to="/profile"
-            onClick={closeMobileSidebar}
-            className={({ isActive }) =>
-              isActive ? "sidebar-link active-link" : "sidebar-link"
-            }
-          >
+          <NavLink to="/profile" onClick={closeMobileSidebar} className={({ isActive }) => isActive ? "sidebar-link active-link" : "sidebar-link"}>
             <span>👤</span>
             Profile
+          </NavLink>
+
+          <NavLink to="/settings" onClick={closeMobileSidebar} className={({ isActive }) => isActive ? "sidebar-link active-link" : "sidebar-link"}>
+            <span>⚙️</span>
+            Settings
           </NavLink>
         </nav>
 
