@@ -11,10 +11,10 @@ type Category = {
 type Product = {
   id: number;
   name: string;
-  description?: string;
+  description: string;
   price: number;
   stock: number;
-  categoryId?: number;
+  categoryId: number;
   category?: Category;
 };
 
@@ -29,19 +29,30 @@ function Products() {
   const [categoryId, setCategoryId] = useState("");
 
   const [editingProductId, setEditingProductId] = useState<number | null>(null);
+  const [deleteProductId, setDeleteProductId] = useState<number | null>(null);
 
   const [search, setSearch] = useState("");
   const [stockFilter, setStockFilter] = useState("ALL");
-  const [deleteProductId, setDeleteProductId] = useState<number | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const itemsPerPage = 5;
 
   const fetchProducts = async () => {
-    const response = await api.get("/products");
-    setProducts(response.data);
+    try {
+      const response = await api.get("/products");
+      setProducts(response.data);
+    } catch (error) {
+      toast.error("Failed to load products");
+    }
   };
 
   const fetchCategories = async () => {
-    const response = await api.get("/categories");
-    setCategories(response.data);
+    try {
+      const response = await api.get("/categories");
+      setCategories(response.data);
+    } catch (error) {
+      toast.error("Failed to load categories");
+    }
   };
 
   const resetForm = () => {
@@ -53,26 +64,14 @@ function Products() {
     setEditingProductId(null);
   };
 
-  const getStockBadgeClass = (stock: number) => {
-    if (stock === 0) return "badge badge-unpaid";
-    if (stock <= 5) return "badge badge-partial";
-    return "badge badge-paid";
-  };
-
-  const getStockLabel = (stock: number) => {
-    if (stock === 0) return "OUT OF STOCK";
-    if (stock <= 5) return "LOW STOCK";
-    return "IN STOCK";
-  };
-
   const filteredProducts = useMemo(() => {
     return products.filter((product) => {
-      const categoryName = product.category?.name || "";
+      const keyword = search.toLowerCase();
 
       const matchSearch =
-        product.name.toLowerCase().includes(search.toLowerCase()) ||
-        product.description?.toLowerCase().includes(search.toLowerCase()) ||
-        categoryName.toLowerCase().includes(search.toLowerCase());
+        product.name.toLowerCase().includes(keyword) ||
+        product.description?.toLowerCase().includes(keyword) ||
+        product.category?.name?.toLowerCase().includes(keyword);
 
       const matchStock =
         stockFilter === "ALL" ||
@@ -84,11 +83,28 @@ function Products() {
     });
   }, [products, search, stockFilter]);
 
+  const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
+
+  const paginatedProducts = filteredProducts.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
   const saveProduct = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!name || !price || !stock || !categoryId) {
+    if (!name || !price || stock === "" || !categoryId) {
       toast.error("Please fill name, price, stock and category");
+      return;
+    }
+
+    if (Number(price) <= 0) {
+      toast.error("Price must be greater than 0");
+      return;
+    }
+
+    if (Number(stock) < 0) {
+      toast.error("Stock cannot be negative");
       return;
     }
 
@@ -100,16 +116,20 @@ function Products() {
       categoryId: Number(categoryId),
     };
 
-    if (editingProductId) {
-  await api.put(`/products/${editingProductId}`, productData);
-  toast.success("Product updated successfully");
-} else {
-  await api.post("/products", productData);
-  toast.success("Product created successfully");
-}
+    try {
+      if (editingProductId) {
+        await api.put(`/products/${editingProductId}`, productData);
+        toast.success("Product updated successfully");
+      } else {
+        await api.post("/products", productData);
+        toast.success("Product created successfully");
+      }
 
-resetForm();
-fetchProducts();
+      resetForm();
+      fetchProducts();
+    } catch (error) {
+      toast.error("Operation failed");
+    }
   };
 
   const editProduct = (product: Product) => {
@@ -118,41 +138,57 @@ fetchProducts();
     setDescription(product.description || "");
     setPrice(String(product.price));
     setStock(String(product.stock));
-    setCategoryId(String(product.categoryId || product.category?.id || ""));
+    setCategoryId(String(product.categoryId));
   };
 
- const requestDeleteProduct = (id: number) => {
-  setDeleteProductId(id);
-};
+  const requestDeleteProduct = (id: number) => {
+    setDeleteProductId(id);
+  };
 
-const confirmDeleteProduct = async () => {
-  if (!deleteProductId) return;
+  const confirmDeleteProduct = async () => {
+    if (!deleteProductId) return;
 
-  try {
-    await api.delete(`/products/${deleteProductId}`);
-    toast.success("Product deleted successfully");
+    try {
+      await api.delete(`/products/${deleteProductId}`);
+      toast.success("Product deleted successfully");
+      setDeleteProductId(null);
+      fetchProducts();
+    } catch (error) {
+      toast.error("Product delete failed");
+    }
+  };
+
+  const cancelDeleteProduct = () => {
     setDeleteProductId(null);
-    fetchProducts();
-  } catch (error) {
-    toast.error("Product delete failed");
-  }
-};
+  };
 
-const cancelDeleteProduct = () => {
-  setDeleteProductId(null);
-};
+  const getStockBadge = (product: Product) => {
+    if (product.stock === 0) {
+      return <span className="badge badge-unpaid">OUT OF STOCK</span>;
+    }
+
+    if (product.stock <= 5) {
+      return <span className="badge badge-partial">LOW STOCK</span>;
+    }
+
+    return <span className="badge badge-paid">IN STOCK</span>;
+  };
 
   useEffect(() => {
     fetchProducts();
     fetchCategories();
   }, []);
 
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, stockFilter]);
+
   return (
     <div>
       <div className="card">
         <h3 style={{ margin: 0 }}>Products Management</h3>
         <p style={{ margin: "6px 0 0", color: "#6b7280" }}>
-          Manage products, categories, prices and stock levels.
+          Manage products, stock levels, categories and prices.
         </p>
       </div>
 
@@ -161,7 +197,7 @@ const cancelDeleteProduct = () => {
 
         <div className="form-grid grid-5">
           <input
-            placeholder="Name"
+            placeholder="Product name"
             value={name}
             onChange={(e) => setName(e.target.value)}
           />
@@ -173,15 +209,15 @@ const cancelDeleteProduct = () => {
           />
 
           <input
-            placeholder="Price"
             type="number"
+            placeholder="Price"
             value={price}
             onChange={(e) => setPrice(e.target.value)}
           />
 
           <input
-            placeholder="Stock"
             type="number"
+            placeholder="Stock"
             value={stock}
             onChange={(e) => setStock(e.target.value)}
           />
@@ -211,7 +247,7 @@ const cancelDeleteProduct = () => {
       </form>
 
       <div className="card">
-        <h3>Filter Products</h3>
+        <h3>Search Products</h3>
 
         <div className="form-grid grid-3">
           <input
@@ -238,6 +274,10 @@ const cancelDeleteProduct = () => {
             Reset filters
           </button>
         </div>
+
+        <div className="table-counter" style={{ marginTop: "12px" }}>
+          {filteredProducts.length} product(s) found
+        </div>
       </div>
 
       <table className="table">
@@ -246,35 +286,31 @@ const cancelDeleteProduct = () => {
             <th>ID</th>
             <th>Name</th>
             <th>Description</th>
+            <th>Category</th>
             <th>Price</th>
             <th>Stock</th>
-            <th>Stock Status</th>
-            <th>Category</th>
+            <th>Status</th>
             <th>Actions</th>
           </tr>
         </thead>
 
         <tbody>
-          {filteredProducts.length === 0 ? (
+          {paginatedProducts.length === 0 ? (
             <tr>
               <td colSpan={8}>
                 <div className="empty-state">No products found</div>
               </td>
             </tr>
           ) : (
-            filteredProducts.map((product) => (
+            paginatedProducts.map((product) => (
               <tr key={product.id}>
                 <td>{product.id}</td>
                 <td>{product.name}</td>
                 <td>{product.description}</td>
+                <td>{product.category?.name}</td>
                 <td>{product.price} DH</td>
                 <td>{product.stock}</td>
-                <td>
-                  <span className={getStockBadgeClass(product.stock)}>
-                    {getStockLabel(product.stock)}
-                  </span>
-                </td>
-                <td>{product.category?.name}</td>
+                <td>{getStockBadge(product)}</td>
                 <td>
                   <div className="actions">
                     <button
@@ -297,16 +333,41 @@ const cancelDeleteProduct = () => {
           )}
         </tbody>
       </table>
-     {deleteProductId && (
-  <ConfirmModal
-    title="Delete Product"
-    message="Are you sure you want to delete this product? This action cannot be undone."
-    confirmText="Delete"
-    cancelText="Cancel"
-    onConfirm={confirmDeleteProduct}
-    onCancel={cancelDeleteProduct}
-  />
-)} 
+
+      {totalPages > 1 && (
+        <div className="pagination">
+          <button
+            className="secondary-button"
+            disabled={currentPage === 1}
+            onClick={() => setCurrentPage(currentPage - 1)}
+          >
+            Previous
+          </button>
+
+          <span>
+            Page {currentPage} / {totalPages}
+          </span>
+
+          <button
+            className="secondary-button"
+            disabled={currentPage === totalPages}
+            onClick={() => setCurrentPage(currentPage + 1)}
+          >
+            Next
+          </button>
+        </div>
+      )}
+
+      {deleteProductId && (
+        <ConfirmModal
+          title="Delete Product"
+          message="Are you sure you want to delete this product? This action cannot be undone."
+          confirmText="Delete"
+          cancelText="Cancel"
+          onConfirm={confirmDeleteProduct}
+          onCancel={cancelDeleteProduct}
+        />
+      )}
     </div>
   );
 }
