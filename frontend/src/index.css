@@ -1233,3 +1233,353 @@ label {
     text-align: center;
   }
 }
+
+/* ========================= */
+/* CUTE LAMP LOGIN MASSMEDIA */
+/* ========================= */
+
+.lamp-login-page {
+  min-height: 100vh;
+  background: radial-gradient(circle at top, #1f2937 0%, #111827 38%, #050708 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  overflow: hidden;
+}
+
+.lamp-login-wrapper {
+  width: 100%;
+  max-width: 920px;
+  min-height: 520px;
+  display: grid;
+  grid-template-columns: 1fr 390px;
+  align-items: center;
+  gap: 56px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 26px;
+  padding: 46px;
+  background: rgba(15, 23, 42, 0.55);
+  box-shadow: 0 35px 90px rgba(0, 0, 0, 0.45);
+  position: relative;
+}
+
+.cute-lamp-zone {
+  position: relative;
+  height: 430px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lamp-light {
+  position: absolute;
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(229, 37, 33, 0.38), transparent 68%);
+  filter: blur(18px);
+  animation: lampGlow 2.8s ease-in-out infinite;
+}
+
+.cute-lamp {
+  position: relative;
+  z-index: 2;
+  animation: lampFloat 3s ease-in-out infinite;
+}
+
+.lamp-shade {
+  width: 170px;
+  height: 125px;
+  background: linear-gradient(180deg, #f8fafc, #d1d5db);
+  border-radius: 46% 46% 22px 22px;
+  position: relative;
+  box-shadow:
+    0 0 35px rgba(229, 37, 33, 0.35),
+    inset 0 -12px 18px rgba(0, 0, 0, 0.08);
+}
+
+.lamp-shade::after {
+  content: "";
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: -8px;
+  height: 14px;
+  background: #f9fafb;
+  border-radius: 999px;
+}
+
+.lamp-eye {
+  position: absolute;
+  top: 62px;
+  width: 9px;
+  height: 16px;
+  border-radius: 999px;
+  background: #111827;
+}
+
+.lamp-eye.left {
+  left: 58px;
+}
+
+.lamp-eye.right {
+  right: 58px;
+}
+
+.lamp-mouth {
+  position: absolute;
+  top: 82px;
+  left: 50%;
+  width: 24px;
+  height: 12px;
+  border-bottom: 3px solid #111827;
+  border-radius: 0 0 999px 999px;
+  transform: translateX(-50%);
+}
+
+.lamp-blush {
+  position: absolute;
+  top: 82px;
+  width: 18px;
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(229, 37, 33, 0.28);
+}
+
+.lamp-blush.left {
+  left: 35px;
+}
+
+.lamp-blush.right {
+  right: 35px;
+}
+
+.lamp-neck {
+  width: 28px;
+  height: 34px;
+  background: #e5e7eb;
+  margin: 0 auto;
+  border-radius: 0 0 12px 12px;
+}
+
+.lamp-pole {
+  width: 16px;
+  height: 140px;
+  background: linear-gradient(180deg, #f9fafb, #9ca3af);
+  margin: 0 auto;
+  border-radius: 999px;
+}
+
+.lamp-base {
+  width: 150px;
+  height: 24px;
+  background: linear-gradient(180deg, #f9fafb, #9ca3af);
+  border-radius: 999px;
+  margin: 0 auto;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+}
+
+.lamp-login-card {
+  background: rgba(17, 24, 39, 0.96);
+  border: 1px solid rgba(229, 37, 33, 0.45);
+  border-radius: 22px;
+  padding: 30px;
+  box-shadow:
+    0 0 0 1px rgba(229, 37, 33, 0.16),
+    0 0 35px rgba(229, 37, 33, 0.35),
+    0 25px 70px rgba(0, 0, 0, 0.45);
+  animation: loginCardShow 0.55s ease;
+}
+
+.lamp-login-logo {
+  width: 72px;
+  height: 72px;
+  object-fit: contain;
+  background: white;
+  border-radius: 18px;
+  padding: 6px;
+  display: block;
+  margin: 0 auto 14px;
+}
+
+.lamp-login-card h1 {
+  color: white;
+  text-align: center;
+  font-size: 30px;
+  margin: 0;
+}
+
+.lamp-login-card p {
+  color: #9ca3af;
+  text-align: center;
+  margin: 8px 0 24px;
+}
+
+.lamp-login-card label {
+  color: #e5e7eb;
+  font-weight: 800;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.lamp-login-card input {
+  width: 100%;
+  background: #1f2937;
+  border: 1px solid #374151;
+  color: white;
+  border-radius: 12px;
+  padding: 13px 14px;
+  margin-bottom: 16px;
+  outline: none;
+}
+
+.lamp-login-card input::placeholder {
+  color: #9ca3af;
+}
+
+.lamp-login-card input:focus {
+  border-color: var(--massmedia-red) !important;
+  box-shadow: 0 0 0 4px rgba(229, 37, 33, 0.18) !important;
+}
+
+.lamp-login-card button {
+  width: 100%;
+  border: none;
+  background: var(--massmedia-red);
+  color: white;
+  border-radius: 12px;
+  padding: 13px;
+  font-size: 15px;
+  font-weight: 900;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.lamp-login-card button:hover {
+  background: var(--massmedia-red-dark);
+  box-shadow: 0 0 24px rgba(229, 37, 33, 0.55);
+  transform: translateY(-2px);
+}
+
+.lamp-login-card button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.lamp-login-demo {
+  margin-top: 18px;
+  background: rgba(31, 41, 55, 0.75);
+  border: 1px solid rgba(75, 85, 99, 0.9);
+  color: #d1d5db;
+  border-radius: 14px;
+  padding: 13px;
+  display: grid;
+  gap: 4px;
+  font-size: 13px;
+}
+
+@keyframes lampFloat {
+  0%, 100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes lampGlow {
+  0%, 100% {
+    opacity: 0.55;
+    transform: scale(0.95);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1.08);
+  }
+}
+
+@keyframes loginCardShow {
+  from {
+    opacity: 0;
+    transform: translateX(22px) scale(0.97);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+@media (max-width: 850px) {
+  .lamp-login-wrapper {
+    grid-template-columns: 1fr;
+    max-width: 430px;
+    padding: 24px;
+    gap: 20px;
+  }
+
+  .cute-lamp-zone {
+    height: 260px;
+  }
+
+  .lamp-shade {
+    width: 130px;
+    height: 96px;
+  }
+
+  .lamp-eye {
+    top: 48px;
+  }
+
+  .lamp-eye.left {
+    left: 43px;
+  }
+
+  .lamp-eye.right {
+    right: 43px;
+  }
+
+  .lamp-mouth {
+    top: 64px;
+  }
+
+  .lamp-blush {
+    top: 65px;
+  }
+
+  .lamp-pole {
+    height: 80px;
+  }
+
+  .lamp-base {
+    width: 120px;
+  }
+}
+
+@media (max-width: 520px) {
+  .lamp-login-page {
+    padding: 14px;
+  }
+
+  .lamp-login-wrapper {
+    border: none;
+    background: transparent;
+    box-shadow: none;
+    padding: 0;
+  }
+
+  .cute-lamp-zone {
+    height: 210px;
+  }
+
+  .lamp-login-card {
+    padding: 24px;
+  }
+
+  .lamp-login-card h1 {
+    font-size: 26px;
+  }
+}

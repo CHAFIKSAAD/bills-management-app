@@ -31,7 +31,7 @@ function Login() {
 
       toast.success("Connexion réussie");
       navigate("/dashboard");
-    } catch (err) {
+    } catch (error) {
       toast.error("Email ou mot de passe incorrect");
     } finally {
       setLoading(false);
@@ -39,41 +39,35 @@ function Login() {
   };
 
   return (
-    <div className="login-page">
-      <div className="login-left">
-        <div className="login-brand">
-          <img src="/massmedia-logo.jpg" alt="MASSMEDIA" className="login-company-logo" />
+    <div className="lamp-login-page">
+      <div className="lamp-login-wrapper">
+        <div className="cute-lamp-zone">
+          <div className="lamp-light"></div>
 
-          <div>
-            <h1>MASSMEDIA</h1>
-            <p>Bills Management System</p>
+          <div className="cute-lamp">
+            <div className="lamp-shade">
+              <div className="lamp-eye left"></div>
+              <div className="lamp-eye right"></div>
+              <div className="lamp-mouth"></div>
+              <div className="lamp-blush left"></div>
+              <div className="lamp-blush right"></div>
+            </div>
+
+            <div className="lamp-neck"></div>
+            <div className="lamp-pole"></div>
+            <div className="lamp-base"></div>
           </div>
         </div>
 
-        <div className="login-info">
-          <h2>Gestion de facturation moderne</h2>
+        <form onSubmit={login} className="lamp-login-card">
+          <img
+            src="/massmedia-logo.jpg"
+            alt="MASSMEDIA"
+            className="lamp-login-logo"
+          />
 
-          <p>
-            Gérez vos clients, produits, factures, paiements, exports PDF/Excel
-            et statistiques depuis une seule application.
-          </p>
-
-          <div className="login-features">
-            <span>✔ Clients</span>
-            <span>✔ Produits</span>
-            <span>✔ Factures</span>
-            <span>✔ Paiements</span>
-            <span>✔ Dashboard</span>
-            <span>✔ Exports</span>
-          </div>
-        </div>
-      </div>
-
-      <div className="login-right">
-        <form onSubmit={login} className="login-card">
-          <h2>Connexion</h2>
-
-          <p>Connectez-vous à votre espace de gestion</p>
+          <h1>Welcome Back</h1>
+          <p>Connectez-vous à votre espace MASSMEDIA</p>
 
           <label>Email</label>
           <input
@@ -91,11 +85,11 @@ function Login() {
             onChange={(e) => setPassword(e.target.value)}
           />
 
-          <button type="submit" className="login-button" disabled={loading}>
-            {loading ? "Connexion..." : "Se connecter"}
+          <button type="submit" disabled={loading}>
+            {loading ? "Connexion..." : "Login"}
           </button>
 
-          <div className="login-demo">
+          <div className="lamp-login-demo">
             <strong>Compte de test</strong>
             <span>Email: saad@test.com</span>
             <span>Password: 123456</span>
