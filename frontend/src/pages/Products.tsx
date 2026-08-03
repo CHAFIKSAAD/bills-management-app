@@ -18,6 +18,26 @@ type Product = {
   category?: Category;
 };
 
+type CompanySettings = {
+  companyName: string;
+  tagline: string;
+  email: string;
+  phone: string;
+  address: string;
+  city: string;
+  defaultTva: string;
+  currency: string;
+};
+const defaultCompanySettings: CompanySettings = {
+  companyName: "MASSMEDIA",
+  tagline: "Impacting business",
+  email: "contact@massmedia.ma",
+  phone: "+212 6 00 00 00 00",
+  address: "Casablanca, Maroc",
+  city: "Casablanca",
+  defaultTva: "20",
+  currency: "DH",
+};
 function Products() {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -34,7 +54,9 @@ function Products() {
   const [search, setSearch] = useState("");
   const [stockFilter, setStockFilter] = useState("ALL");
   const [currentPage, setCurrentPage] = useState(1);
-
+  const [companySettings, setCompanySettings] = useState<CompanySettings>(
+  defaultCompanySettings
+  );
   const itemsPerPage = 5;
 
   const fetchProducts = async () => {
@@ -175,9 +197,15 @@ function Products() {
   };
 
   useEffect(() => {
-    fetchProducts();
-    fetchCategories();
-  }, []);
+  const savedSettings = localStorage.getItem("companySettings");
+
+  if (savedSettings) {
+    setCompanySettings(JSON.parse(savedSettings));
+  }
+
+  fetchProducts();
+  fetchCategories();
+}, []);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -308,7 +336,9 @@ function Products() {
                 <td>{product.name}</td>
                 <td>{product.description}</td>
                 <td>{product.category?.name}</td>
-                <td>{product.price} DH</td>
+                <td>
+  {product.price} {companySettings.currency}
+</td>
                 <td>{product.stock}</td>
                 <td>{getStockBadge(product)}</td>
                 <td>

@@ -2078,3 +2078,357 @@ label {
     grid-template-columns: 1fr;
   }
 }
+
+/* Fix invoice PDF print on one page */
+
+@media print {
+  @page {
+    size: A4;
+    margin: 8mm;
+  }
+
+  body {
+    background: white !important;
+  }
+
+  .no-print,
+  .sidebar,
+  .topbar,
+  .invoice-actions {
+    display: none !important;
+  }
+
+  .app-layout,
+  .main-content,
+  .page-container {
+    display: block !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: white !important;
+  }
+
+  .invoice-page {
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
+    border-radius: 0 !important;
+    font-size: 11px !important;
+  }
+
+  .invoice-header {
+    display: flex !important;
+    flex-direction: row !important;
+    justify-content: space-between !important;
+    align-items: flex-start !important;
+    gap: 20px !important;
+    padding-bottom: 10px !important;
+    margin-bottom: 12px !important;
+  }
+
+  .company-block {
+    display: flex !important;
+    gap: 10px !important;
+  }
+
+  .invoice-company-logo {
+    width: 54px !important;
+    height: 54px !important;
+  }
+
+  .company-block h1,
+  .invoice-meta h2 {
+    font-size: 22px !important;
+    margin: 0 0 4px !important;
+  }
+
+  .company-block p,
+  .invoice-meta p,
+  .client-box p {
+    margin: 2px 0 !important;
+    font-size: 11px !important;
+  }
+
+  .invoice-section {
+    margin-top: 10px !important;
+  }
+
+  .invoice-section h3,
+  .payment-box h3 {
+    font-size: 14px !important;
+    margin: 0 0 8px !important;
+  }
+
+  .client-box {
+    padding: 9px 12px !important;
+    border-radius: 10px !important;
+  }
+
+  .invoice-table {
+    width: 100% !important;
+    margin-top: 6px !important;
+  }
+
+  .invoice-table th,
+  .invoice-table td {
+    padding: 7px 8px !important;
+    font-size: 11px !important;
+  }
+
+  .invoice-bottom {
+    display: grid !important;
+    grid-template-columns: 1fr 260px !important;
+    gap: 14px !important;
+    margin-top: 12px !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  .payment-box,
+  .totals-box {
+    padding: 10px 12px !important;
+    border-radius: 10px !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  .total-line {
+    padding: 5px 0 !important;
+    font-size: 11px !important;
+  }
+
+  .invoice-footer {
+    margin-top: 14px !important;
+    padding-top: 10px !important;
+    font-size: 11px !important;
+  }
+}
+
+/* Make invoice PDF bigger while keeping one page */
+
+@media print {
+  @page {
+    size: A4;
+    margin: 7mm;
+  }
+
+  .invoice-page {
+    font-size: 12.5px !important;
+  }
+
+  .invoice-company-logo {
+    width: 64px !important;
+    height: 64px !important;
+  }
+
+  .company-block h1,
+  .invoice-meta h2 {
+    font-size: 26px !important;
+  }
+
+  .company-block p,
+  .invoice-meta p,
+  .client-box p {
+    font-size: 12.5px !important;
+  }
+
+  .invoice-section h3,
+  .payment-box h3 {
+    font-size: 16px !important;
+  }
+
+  .client-box {
+    padding: 13px 16px !important;
+  }
+
+  .invoice-table th,
+  .invoice-table td {
+    padding: 9px 10px !important;
+    font-size: 12.5px !important;
+  }
+
+  .invoice-bottom {
+    grid-template-columns: 1fr 300px !important;
+    gap: 16px !important;
+    margin-top: 16px !important;
+  }
+
+  .payment-box,
+  .totals-box {
+    padding: 14px 16px !important;
+  }
+
+  .total-line {
+    padding: 6.5px 0 !important;
+    font-size: 12.5px !important;
+  }
+
+  .invoice-footer {
+    margin-top: 18px !important;
+    padding-top: 12px !important;
+    font-size: 12px !important;
+  }
+}
+
+/* Invoice PDF bigger version */
+
+@media print {
+  @page {
+    size: A4;
+    margin: 5mm;
+  }
+
+  .invoice-page {
+    font-size: 14px !important;
+  }
+
+  .invoice-company-logo {
+    width: 78px !important;
+    height: 78px !important;
+  }
+
+  .company-block {
+    gap: 14px !important;
+  }
+
+  .company-block h1,
+  .invoice-meta h2 {
+    font-size: 31px !important;
+    margin-bottom: 6px !important;
+  }
+
+  .company-block p,
+  .invoice-meta p,
+  .client-box p {
+    font-size: 14px !important;
+    line-height: 1.35 !important;
+  }
+
+  .invoice-section {
+    margin-top: 16px !important;
+  }
+
+  .invoice-section h3,
+  .payment-box h3 {
+    font-size: 18px !important;
+    margin-bottom: 10px !important;
+  }
+
+  .client-box {
+    padding: 16px 18px !important;
+  }
+
+  .invoice-table th,
+  .invoice-table td {
+    padding: 12px 12px !important;
+    font-size: 14px !important;
+  }
+
+  .invoice-bottom {
+    grid-template-columns: 1fr 340px !important;
+    gap: 18px !important;
+    margin-top: 20px !important;
+  }
+
+  .payment-box,
+  .totals-box {
+    padding: 16px 18px !important;
+  }
+
+  .total-line {
+    padding: 8px 0 !important;
+    font-size: 14px !important;
+  }
+
+  .invoice-footer {
+    margin-top: 22px !important;
+    padding-top: 14px !important;
+    font-size: 13.5px !important;
+  }
+}
+
+/* Invoice PDF extra large version */
+
+@media print {
+  @page {
+    size: A4;
+    margin: 3mm;
+  }
+
+  .invoice-page {
+    font-size: 16px !important;
+    width: 100% !important;
+  }
+
+  .invoice-header {
+    margin-bottom: 18px !important;
+    padding-bottom: 14px !important;
+  }
+
+  .invoice-company-logo {
+    width: 92px !important;
+    height: 92px !important;
+  }
+
+  .company-block {
+    gap: 18px !important;
+  }
+
+  .company-block h1,
+  .invoice-meta h2 {
+    font-size: 36px !important;
+    margin-bottom: 8px !important;
+  }
+
+  .company-block p,
+  .invoice-meta p,
+  .client-box p {
+    font-size: 15.5px !important;
+    line-height: 1.45 !important;
+  }
+
+  .invoice-section {
+    margin-top: 20px !important;
+  }
+
+  .invoice-section h3,
+  .payment-box h3 {
+    font-size: 20px !important;
+    margin-bottom: 12px !important;
+  }
+
+  .client-box {
+    padding: 20px 22px !important;
+  }
+
+  .invoice-table th,
+  .invoice-table td {
+    padding: 15px 14px !important;
+    font-size: 15.5px !important;
+  }
+
+  .invoice-bottom {
+    grid-template-columns: 1fr 380px !important;
+    gap: 20px !important;
+    margin-top: 24px !important;
+  }
+
+  .payment-box,
+  .totals-box {
+    padding: 20px 22px !important;
+  }
+
+  .total-line {
+    padding: 10px 0 !important;
+    font-size: 15.5px !important;
+  }
+
+  .invoice-footer {
+    margin-top: 26px !important;
+    padding-top: 16px !important;
+    font-size: 15px !important;
+  }
+}

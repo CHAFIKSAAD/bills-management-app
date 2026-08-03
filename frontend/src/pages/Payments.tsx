@@ -23,6 +23,28 @@ type Payment = {
   invoice?: Invoice;
 };
 
+type CompanySettings = {
+  companyName: string;
+  tagline: string;
+  email: string;
+  phone: string;
+  address: string;
+  city: string;
+  defaultTva: string;
+  currency: string;
+};
+
+const defaultCompanySettings: CompanySettings = {
+  companyName: "MASSMEDIA",
+  tagline: "Impacting business",
+  email: "contact@massmedia.ma",
+  phone: "+212 6 00 00 00 00",
+  address: "Casablanca, Maroc",
+  city: "Casablanca",
+  defaultTva: "20",
+  currency: "DH",
+};
+
 function Payments() {
   const [payments, setPayments] = useState<Payment[]>([]);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
@@ -34,7 +56,9 @@ function Payments() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [currentPage, setCurrentPage] = useState(1);
-
+  const [companySettings, setCompanySettings] = useState<CompanySettings>(
+  defaultCompanySettings
+);
   const itemsPerPage = 5;
 
   const fetchData = async () => {
@@ -110,7 +134,9 @@ function Payments() {
     const remaining = Number(selectedInvoice.totalTTC) - totalPaid;
 
     if (Number(amount) > remaining) {
-      toast.error(`Payment amount cannot exceed remaining amount: ${remaining} DH`);
+      toast.error(
+  `Payment amount cannot exceed remaining amount: ${remaining} ${companySettings.currency}`
+);
       return;
     }
 
@@ -141,8 +167,14 @@ function Payments() {
   };
 
   useEffect(() => {
-    fetchData();
-  }, []);
+  const savedSettings = localStorage.getItem("companySettings");
+
+  if (savedSettings) {
+    setCompanySettings(JSON.parse(savedSettings));
+  }
+
+  fetchData();
+}, []);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -173,7 +205,7 @@ function Payments() {
 
                 return (
                   <option key={invoice.id} value={invoice.id}>
-                    Invoice #{invoice.id} - {invoice.client?.name} - Remaining {remaining} DH - {invoice.status}
+                    Invoice #{invoice.id} - {invoice.client?.name} - Remaining {remaining} {companySettings.currency} - {invoice.status}
                   </option>
                 );
               })}
@@ -263,7 +295,9 @@ function Payments() {
                 <td>{payment.id}</td>
                 <td>#{payment.invoiceId}</td>
                 <td>{payment.invoice?.client?.name}</td>
-                <td>{payment.amount} DH</td>
+                <td>
+  {payment.amount} {companySettings.currency}
+</td>
                 <td>{payment.method}</td>
                 <td>
                   <span className={getStatusBadgeClass(payment.invoice?.status || "UNPAID")}>

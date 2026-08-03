@@ -34,12 +34,36 @@ type Product = {
 
 type DashboardStats = Record<string, any>;
 
+type CompanySettings = {
+  companyName: string;
+  tagline: string;
+  email: string;
+  phone: string;
+  address: string;
+  city: string;
+  defaultTva: string;
+  currency: string;
+};
+
+const defaultCompanySettings: CompanySettings = {
+  companyName: "MASSMEDIA",
+  tagline: "Impacting business",
+  email: "contact@massmedia.ma",
+  phone: "+212 6 00 00 00 00",
+  address: "Casablanca, Maroc",
+  city: "Casablanca",
+  defaultTva: "20",
+  currency: "DH",
+};
+
 function Dashboard() {
   const [stats, setStats] = useState<DashboardStats>({});
   const [clients, setClients] = useState<Client[]>([]);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
-
+  const [companySettings, setCompanySettings] = useState<CompanySettings>(
+  defaultCompanySettings
+  );
   const [viewMode, setViewMode] = useState(
     localStorage.getItem("dashboardViewMode") || "cards"
   );
@@ -93,7 +117,7 @@ function Dashboard() {
     { label: "Clients", value: dashboardValues.clients, suffix: "" },
     { label: "Produits", value: dashboardValues.products, suffix: "" },
     { label: "Factures", value: dashboardValues.invoices, suffix: "" },
-    { label: "Revenus", value: dashboardValues.revenue, suffix: " DH" },
+    { label: "Revenus", value: dashboardValues.revenue, suffix: ` ${companySettings.currency}`,},
     { label: "Stock total", value: dashboardValues.stock, suffix: "" },
     { label: "Payées", value: dashboardValues.paid, suffix: "" },
     { label: "Partielles", value: dashboardValues.partial, suffix: "" },
@@ -152,8 +176,14 @@ setProducts(productsRes.data);
   };
 
   useEffect(() => {
-    fetchData();
-  }, []);
+  const savedSettings = localStorage.getItem("companySettings");
+
+  if (savedSettings) {
+    setCompanySettings(JSON.parse(savedSettings));
+  }
+
+  fetchData();
+}, []);
 
   return (
     <div>
@@ -295,7 +325,9 @@ setProducts(productsRes.data);
                   <tr key={invoice.id}>
                     <td>#{invoice.id}</td>
                     <td>{invoice.client?.name}</td>
-                    <td>{invoice.totalTTC} DH</td>
+                    <td>
+  {invoice.totalTTC} {companySettings.currency}
+</td>
                     <td>
                       <span className={getStatusBadgeClass(invoice.status)}>
                         {invoice.status}
