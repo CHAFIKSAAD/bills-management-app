@@ -2432,3 +2432,35 @@ label {
     font-size: 15px !important;
   }
 }
+
+/* Global loading bar */
+
+.global-loader {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  z-index: 99999;
+  background: rgba(229, 37, 33, 0.12);
+  overflow: hidden;
+}
+
+.global-loader-bar {
+  width: 35%;
+  height: 100%;
+  background: var(--massmedia-red);
+  border-radius: 999px;
+  animation: loadingBarMove 0.9s ease-in-out infinite;
+  box-shadow: 0 0 18px rgba(229, 37, 33, 0.8);
+}
+
+@keyframes loadingBarMove {
+  0% {
+    transform: translateX(-120%);
+  }
+
+  100% {
+    transform: translateX(320%);
+  }
+}
