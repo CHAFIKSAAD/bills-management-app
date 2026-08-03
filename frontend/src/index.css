@@ -2611,3 +2611,40 @@ label {
     display: none;
   }
 }
+
+/* Breadcrumb */
+
+.breadcrumb {
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.breadcrumb a {
+  color: #6b7280;
+  text-decoration: none;
+}
+
+.breadcrumb a:hover {
+  color: var(--massmedia-red);
+}
+
+.breadcrumb strong {
+  color: var(--massmedia-red);
+}
+
+.breadcrumb em {
+  color: #9ca3af;
+  font-style: normal;
+}
+
+@media (max-width: 600px) {
+  .breadcrumb {
+    font-size: 11px;
+    gap: 4px;
+  }
+}

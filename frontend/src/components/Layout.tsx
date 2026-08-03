@@ -1,5 +1,5 @@
 ﻿import { useState } from "react";
-import { NavLink, Outlet, useLocation } from "react-router-dom";
+import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 
 const pageTitles: Record<string, string> = {
   "/dashboard": "Dashboard",
@@ -34,6 +34,21 @@ function Layout() {
     ? "Invoice Details"
     : pageTitles[location.pathname] || "Bills App";
 
+  const getBreadcrumb = () => {
+    if (location.pathname.startsWith("/invoices/")) {
+      return [
+        { label: "Dashboard", path: "/dashboard" },
+        { label: "Invoices", path: "/invoices" },
+        { label: "Invoice Details", path: "" },
+      ];
+    }
+
+    return [
+      { label: "Dashboard", path: "/dashboard" },
+      { label: currentPage, path: "" },
+    ];
+  };
+
   const closeMobileSidebar = () => {
     setMobileSidebarOpen(false);
   };
@@ -43,6 +58,8 @@ function Layout() {
     localStorage.removeItem("user");
     window.location.href = "/";
   };
+
+  const breadcrumb = getBreadcrumb();
 
   return (
     <div className="app-layout">
@@ -124,6 +141,20 @@ function Layout() {
             <div>
               <p className="topbar-subtitle">Bills Management App</p>
               <h2>{currentPage}</h2>
+
+              <div className="breadcrumb">
+                {breadcrumb.map((item, index) => (
+                  <span key={index}>
+                    {item.path ? (
+                      <Link to={item.path}>{item.label}</Link>
+                    ) : (
+                      <strong>{item.label}</strong>
+                    )}
+
+                    {index < breadcrumb.length - 1 && <em>/</em>}
+                  </span>
+                ))}
+              </div>
             </div>
           </div>
 
