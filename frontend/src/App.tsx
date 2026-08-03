@@ -12,6 +12,7 @@ import Payments from "./pages/Payments";
 import Layout from "./components/Layout";
 import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
+import NotFound from "./pages/NotFound";
 
 function ProtectedRoute({ children }: { children: ReactNode }) {
   const token = localStorage.getItem("token");
@@ -45,6 +46,7 @@ function App() {
           <Route path="/payments" element={<Payments />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/settings" element={<Settings />} />
+          <Route path="*" element={<NotFound />} />
         </Route>
       </Routes>
     </BrowserRouter>
