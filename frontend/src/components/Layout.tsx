@@ -15,6 +15,7 @@ const pageTitles: Record<string, string> = {
 function Layout() {
   const location = useLocation();
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
 
   const storedUser = localStorage.getItem("user");
   const user = storedUser ? JSON.parse(storedUser) : null;
@@ -126,13 +127,34 @@ function Layout() {
             </div>
           </div>
 
-          <div className="topbar-user">
-            <div className="user-avatar">{userInitial}</div>
+          <div className="topbar-user-wrapper">
+            <button
+              className="topbar-user topbar-user-button"
+              onClick={() => setUserMenuOpen(!userMenuOpen)}
+            >
+              <div className="user-avatar">{userInitial}</div>
 
-            <div>
-              <strong>{userName}</strong>
-              <span>{userRole}</span>
-            </div>
+              <div>
+                <strong>{userName}</strong>
+                <span>{userRole}</span>
+              </div>
+
+              <span className="dropdown-arrow">▾</span>
+            </button>
+
+            {userMenuOpen && (
+              <div className="user-dropdown">
+                <NavLink to="/profile" onClick={() => setUserMenuOpen(false)}>
+                  👤 Profile
+                </NavLink>
+
+                <NavLink to="/settings" onClick={() => setUserMenuOpen(false)}>
+                  ⚙️ Settings
+                </NavLink>
+
+                <button onClick={logout}>🚪 Logout</button>
+              </div>
+            )}
           </div>
         </header>
 
