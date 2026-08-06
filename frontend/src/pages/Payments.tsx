@@ -59,6 +59,9 @@ function Payments() {
   const [companySettings, setCompanySettings] = useState<CompanySettings>(
   defaultCompanySettings
 );
+  const formatInvoiceNumber = (id: number) => {
+  return `INV-${String(id).padStart(4, "0")}`;
+};
   const itemsPerPage = 5;
 
   const fetchData = async () => {
@@ -82,7 +85,7 @@ function Payments() {
   const filteredPayments = useMemo(() => {
     return payments.filter((payment) => {
       const clientName = payment.invoice?.client?.name || "";
-      const invoiceNumber = `#${payment.invoiceId}`;
+      const invoiceNumber = formatInvoiceNumber(payment.invoiceId);
 
       const matchSearch =
         clientName.toLowerCase().includes(search.toLowerCase()) ||
@@ -205,7 +208,7 @@ function Payments() {
 
                 return (
                   <option key={invoice.id} value={invoice.id}>
-                    Invoice #{invoice.id} - {invoice.client?.name} - Remaining {remaining} {companySettings.currency} - {invoice.status}
+                    {formatInvoiceNumber(invoice.id)} - {invoice.client?.name} - Remaining {remaining} {companySettings.currency} - {invoice.status}
                   </option>
                 );
               })}
@@ -293,7 +296,7 @@ function Payments() {
             paginatedPayments.map((payment) => (
               <tr key={payment.id}>
                 <td>{payment.id}</td>
-                <td>#{payment.invoiceId}</td>
+                <td>{formatInvoiceNumber(payment.invoiceId)}</td>
                 <td>{payment.invoice?.client?.name}</td>
                 <td>
   {payment.amount} {companySettings.currency}

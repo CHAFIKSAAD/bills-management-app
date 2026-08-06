@@ -7,7 +7,20 @@ const createProduct = async (req, res) => {
     if (!name || price === undefined) {
       return res.status(400).json({ message: "Name and price are required" });
     }
+    const existingProduct = await prisma.product.findFirst({
+  where: {
+    name: {
+      equals: name,
+      mode: "insensitive",
+    },
+  },
+});
 
+if (existingProduct) {
+  return res.status(400).json({
+    message: "Ce produit existe déjà",
+  });
+}
     const product = await prisma.product.create({
       data: {
         name,
@@ -93,7 +106,23 @@ const updateProduct = async (req, res) => {
   try {
     const { id } = req.params;
     const { name, description, price, stock, categoryId } = req.body;
+    const duplicateProduct = await prisma.product.findFirst({
+  where: {
+    id: {
+      not: Number(id),
+    },
+    name: {
+      equals: name,
+      mode: "insensitive",
+    },
+  },
+});
 
+if (duplicateProduct) {
+  return res.status(400).json({
+    message: "Un autre produit existe déjà avec ce nom",
+  });
+}
     const product = await prisma.product.update({
       where: {
         id: Number(id)

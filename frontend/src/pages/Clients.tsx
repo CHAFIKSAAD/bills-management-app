@@ -96,9 +96,12 @@ function Clients() {
 
       resetForm();
       fetchClients();
-    } catch (error) {
-      toast.error("Operation failed");
-    }
+    } catch (error: any) {
+  const message =
+    error.response?.data?.message || "Opération échouée";
+
+  toast.error(message);
+}
   };
 
   const editClient = (client: Client) => {

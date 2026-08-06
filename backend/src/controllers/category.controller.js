@@ -7,7 +7,20 @@ const createCategory = async (req, res) => {
     if (!name) {
       return res.status(400).json({ message: "Category name is required" });
     }
+    const existingCategory = await prisma.category.findFirst({
+  where: {
+    name: {
+      equals: name,
+      mode: "insensitive",
+    },
+  },
+});
 
+if (existingCategory) {
+  return res.status(400).json({
+    message: "Cette catégorie existe déjà",
+  });
+}
     const category = await prisma.category.create({
       data: { name }
     });
@@ -64,7 +77,23 @@ const updateCategory = async (req, res) => {
   try {
     const { id } = req.params;
     const { name } = req.body;
+    const duplicateCategory = await prisma.category.findFirst({
+  where: {
+    id: {
+      not: Number(id),
+    },
+    name: {
+      equals: name,
+      mode: "insensitive",
+    },
+  },
+});
 
+if (duplicateCategory) {
+  return res.status(400).json({
+    message: "Une autre catégorie existe déjà avec ce nom",
+  });
+}
     const category = await prisma.category.update({
       where: { id: Number(id) },
       data: { name }

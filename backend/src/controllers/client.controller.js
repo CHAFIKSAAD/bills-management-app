@@ -1,5 +1,6 @@
 const prisma = require("../config/prisma");
 
+
 const createClient = async (req, res) => {
   try {
     const { name, email, phone, address } = req.body;
@@ -7,7 +8,52 @@ const createClient = async (req, res) => {
     if (!name) {
       return res.status(400).json({ message: "Le nom du client est obligatoire" });
     }
+    const existingClient = await prisma.client.findFirst({
+  where: {
+    OR: [
+      {
+        email: {
+          equals: email,
+          mode: "insensitive",
+        },
+      },
+      {
+        phone: phone,
+      },
+      {
+        AND: [
+          {
+            name: {
+              equals: name,
+              mode: "insensitive",
+            },
+          },
+          {
+            email: {
+              equals: email,
+              mode: "insensitive",
+            },
+          },
+          {
+            phone: phone,
+          },
+          {
+            address: {
+              equals: address,
+              mode: "insensitive",
+            },
+          },
+        ],
+      },
+    ],
+  },
+});
 
+if (existingClient) {
+  return res.status(400).json({
+    message: "Ce client existe déjà avec les mêmes informations",
+  });
+}
     const client = await prisma.client.create({
       data: {
         name,
@@ -84,7 +130,55 @@ const updateClient = async (req, res) => {
   try {
     const { id } = req.params;
     const { name, email, phone, address } = req.body;
+    const duplicateClient = await prisma.client.findFirst({
+  where: {
+    id: {
+      not: Number(id),
+    },
+    OR: [
+      {
+        email: {
+          equals: email,
+          mode: "insensitive",
+        },
+      },
+      {
+        phone: phone,
+      },
+      {
+        AND: [
+          {
+            name: {
+              equals: name,
+              mode: "insensitive",
+            },
+          },
+          {
+            email: {
+              equals: email,
+              mode: "insensitive",
+            },
+          },
+          {
+            phone: phone,
+          },
+          {
+            address: {
+              equals: address,
+              mode: "insensitive",
+            },
+          },
+        ],
+      },
+    ],
+  },
+});
 
+if (duplicateClient) {
+  return res.status(400).json({
+    message: "Un autre client existe déjà avec ces informations",
+  });
+}
     const client = await prisma.client.update({
       where: {
         id: Number(id)
